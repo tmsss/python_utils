@@ -1,0 +1,8 @@
+# remove python cache
+__pycache__/
+
+# remove ntlk files
+stanford-ner-2018-02-27/
+
+# remove api credentials
+apis.py
