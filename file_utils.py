@@ -155,26 +155,41 @@ def create_folder(folder):
 
 
 # save data in a json file
-def save_json(fname, array_):
-    data = []
+def save_json(fname, data):
 
-    try:
-        fname = fname + '.json'
+    fname = fname + '.json'
 
-        # check if json files exists to prevent "[Errno 2] No such file or directory" error
-        # and write an empty list otherwise
-        if os.path.isfile(fname):
-            with open(fname) as f:
-                data = json.load(f)
-        else:
-            with open(fname, 'w') as f:
-                json.dump(data, f)
-
-        data.extend(array_)
-
+    if os.path.isfile(fname) is False:
         with open(fname, 'w') as f:
             json.dump(data, f)
+            print('%s first records were saved in file %s.' % (len(data), fname))
+    else:
+        with open(fname) as f:
+            lst = json.load(f)
+
+        lst.append(data)
+
+        with open(fname, 'w') as f:
+            json.dump(lst, f)
             print('%s records were saved in file %s.' % (len(data), fname))
 
-    except Exception as e:
-        print("File saving failed with error: %s" % e)
+    # try:
+    #     fname = fname + '.json'
+    #
+    #     # check if json files exists to prevent "[Errno 2] No such file or directory" error
+    #     # and write an empty list otherwise
+    #     if os.path.isfile(fname):
+    #         with open(fname) as f:
+    #             data = json.load(f)
+    #     else:
+    #         with open(fname, 'w') as f:
+    #             json.dump(data, f)
+    #
+    #     data.append(array_)
+    #
+    #     with open(fname, 'w') as f:
+    #         json.dump(data, f)
+    #         print('%s records were saved in file %s.' % (len(data), fname))
+    #
+    # except Exception as e:
+    #     print("File saving failed with error: %s" % e)

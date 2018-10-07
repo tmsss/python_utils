@@ -180,11 +180,11 @@ def df_fn_sql(db, table, fn, fields, type, file, null=False):
 
 
 # import json file to dataframe
-def json_pd(fname):
+def json_pd(fname, orient):
     with io.open(fname, encoding='utf-8') as f:
         data = json.load(f)
 
-    df = pd.read_json(data, orient='records')
+    df = pd.read_json(data, orient=orient)
 
     return df
 

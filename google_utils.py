@@ -7,6 +7,7 @@ import json
 import os
 import re
 from utils import file_utils as fx
+from python_utils import apis
 
 
 headers = {
@@ -19,6 +20,7 @@ headers = {
         'Upgrade-Insecure-Requests': '1'
     }
 
+DEVELOPER_KEY = apis.google_api()
 
 # youtube
 YOUTUBE_API_SERVICE_NAME = "youtube"

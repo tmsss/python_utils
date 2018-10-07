@@ -5,7 +5,6 @@ import datetime as dt
 # get the day from now
 def get_date(days_ago, date_object=False):
     days = dt.datetime.now() - dt.timedelta(days=days_ago)
-    print(days)
 
     if date_object:
         return days

@@ -25,7 +25,7 @@ class TwitterManager(object):
         Return: tweepy.OAuthHandler object
         """
 
-        api = apis.get_twitter_api()
+        api = apis.twitter_api()
         auth = OAuthHandler(api['consumer_key'], api['consumer_secret'])
         auth.set_access_token(api['access_token'], api['access_secret'])
 
