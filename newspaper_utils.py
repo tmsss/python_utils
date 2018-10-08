@@ -4,12 +4,12 @@ import os
 import json
 import pandas as pd
 import numpy as np
-from utils import file_utils as fx
-from utils import regex_utils as rx
-from utils import pandas_utils as pdx
-from utils import requests_utils as rqx
-from utils import google_utils as gx
-from utils import sqlite_utils as dbx
+from python_utils import file_utils as fx
+from python_utils import regex_utils as rx
+from python_utils import pandas_utils as pdx
+from python_utils import requests_utils as rqx
+from python_utils import google_utils as gx
+from python_utils import sqlite_utils as dbx
 from tqdm import tqdm
 
 

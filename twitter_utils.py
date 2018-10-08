@@ -129,7 +129,13 @@ class TwitterManager(object):
                         self.initial = False
 
                     tweets = self.get_search_page(query, max_tweets, since_id, self.max_id)
-                    fx.save_json('data/' + query + '/' + day, tweets)
+
+                    tweets_tosave = []
+                    tweets_tosave.append(tweets)
+
+                    while len(tweets_tosave) < 5000:
+                        fname = tweets_tosave[-1]['created_at']
+                        fx.save_json('data/' + str(fname) + '/' + day, tweets)
 
 
 

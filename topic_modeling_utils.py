@@ -17,9 +17,9 @@ from wordcloud import WordCloud
 import bokeh.plotting as bp
 from bokeh.plotting import save
 from bokeh.models import HoverTool
-from utils import pandas_utils as pdx
-from utils import file_utils as fx
-from utils import regex_utils as rx
+from python_utils import pandas_utils as pdx
+from python_utils import file_utils as fx
+from python_utils import regex_utils as rx
 
 # configure java home variable for NERTagger
 os.environ['JAVAHOME'] = "C:\\Program Files\\Java\\jdk1.8.0_101\\bin\\java.exe"

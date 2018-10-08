@@ -7,7 +7,7 @@ import numpy as np
 import networkx as nx
 import community
 import seaborn as sns
-from utils import matrix_utils as mx
+from python_utils import matrix_utils as mx
 
 # offline.init_notebook_mode()
 

@@ -6,7 +6,7 @@ import urllib.request
 import json
 import os
 import re
-from utils import file_utils as fx
+from python_utils import file_utils as fx
 from python_utils import apis
 
 

@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import networkx as nx
 from operator import itemgetter
-from utils import file_utils as fx
+from python_utils import file_utils as fx
 
 
 
