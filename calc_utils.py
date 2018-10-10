@@ -12,6 +12,7 @@ def find_max(*args):
     all = sum(args, [])
     return max(all)
 
+
 # Jensen-Shannon Divergence from https://stackoverflow.com/questions/15880133/jensen-shannon-divergence#27432724
 def JSD(prob_distributions, weights, logbase=2):
     # left term: entropy of misture
@@ -28,13 +29,13 @@ def JSD(prob_distributions, weights, logbase=2):
     return(divergence)
 
 # From the original example with three distributions:
-P_1 = np.array([1/2, 1/2, 0])
-P_2 = np.array([0, 1/10, 9/10])
-P_3 = np.array([1/3, 1/3, 1/3])
-
-prob_distributions = np.array([P_1, P_2, P_3])
-n = len(prob_distributions)
-weights = np.empty(n)
-weights.fill(1/n)
-
-print(JSD(prob_distributions, weights))
+# P_1 = np.array([1/2, 1/2, 0])
+# P_2 = np.array([0, 1/10, 9/10])
+# P_3 = np.array([1/3, 1/3, 1/3])
+#
+# prob_distributions = np.array([P_1, P_2, P_3])
+# n = len(prob_distributions)
+# weights = np.empty(n)
+# weights.fill(1/n)
+#
+# print(JSD(prob_distributions, weights))

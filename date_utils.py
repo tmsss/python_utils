@@ -21,3 +21,8 @@ def date_range_day(start, end, delta):
 # date aliases here https://pandas.pydata.org/pandas-docs/stable/timeseries.html#timeseries-offset-aliases
 def date_range_month(start, end, format, freq):
     return [i.strftime(format) for i in pd.date_range(start=start, end=end, freq=freq)]
+
+
+# date formats at https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior
+def format_date_str(string, old_format, new_format):
+    return dt.datetime.strptime('Sun Oct 07 23:59:33 +0000 2018', old_format).strftime(new_format)

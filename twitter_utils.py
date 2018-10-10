@@ -4,15 +4,11 @@ Created on Wed Mar 01 21:40:59 2017
 
 @author: tmsss
 """
-import os
 import time
-import sys
-import json
 from tweepy import API
 from tweepy import OAuthHandler
 from tweepy import TweepError
 from tweepy import parsers
-import datetime as dt
 from python_utils import file_utils as fx
 from python_utils import date_utils as dx
 from python_utils import apis
@@ -35,10 +31,6 @@ class TwitterManager(object):
         self.max_id = ''
         # self.since_id = ''
         self.attributes = kwargs
-
-    def get_date(self, days_ago):
-        days = dt.datetime.now() - dt.timedelta(days=days_ago)
-        return '{0}-{1:0>2}-{2:0>2}'.format(days.year, days.month, days.day)
 
     def get_tweet_id(self, query, count, date):
         ''' Function that gets the ID of a tweet. This ID can then be
@@ -115,9 +107,8 @@ class TwitterManager(object):
             range = dx.date_range_day(start, end, 1)
 
             for day in range:
-                #iniciar loop e salvar tweets no ficheiro
-                    #escrever para ficheiro
-                    #quebrar loop e iniciar outro dia
+
+                tweets_tosave = []
 
                 while self.search is True:
 
@@ -130,54 +121,12 @@ class TwitterManager(object):
 
                     tweets = self.get_search_page(query, max_tweets, since_id, self.max_id)
 
-                    tweets_tosave = []
-                    tweets_tosave.append(tweets)
+                    tweets_tosave.extend(tweets)
 
-                    while len(tweets_tosave) < 5000:
-                        fname = tweets_tosave[-1]['created_at']
-                        fx.save_json('data/' + str(fname) + '/' + day, tweets)
-
-
-
-            # # set the 'starting point' ID for tweet collection
-            # if read_IDs:
-            #     # open the json file and get the latest tweet ID
-            #     with open(json_file, 'r') as f:
-            #         lines = f.readlines()
-            #         max_id = json.loads(lines[-1])['id']
-            #         print('max id in file is ', max_id)
-            # else:
-            #     # get the ID of a tweet that is min_days_old
-            #     if min_days_old == 0:
-            #         max_id = -1
-            #     else:
-            #         max_id = self.get_tweet_id(query, max_tweets, min_days_old-1)
-            # # set the smallest ID to search for
-            # since_id = self.get_tweet_id(query, max_tweets, max_days_old-1)
-            # print('max id (starting point) =', max_id)
-            # print('since id (ending point) =', since_id)
-            #
-            # # tweet gathering loop
-            # start = dt.datetime.now()
-            # end = start + dt.timedelta(hours=time_limit)
-            # count, exitcount = 0, 0
-            # while dt.datetime.now() < end:
-            #     count += 1
-            #     # collect tweets and update max_id
-            #     tweets = self.get_search_page(query, max_tweets, since_id, max_id)
-            #
-            #     # write tweets to file in JSON format
-            #     if tweets:
-            #         self.write_tweets(tweets, json_file)
-            #         exitcount = 0
-            #     else:
-            #         exitcount += 1
-            #         if exitcount == 3:
-            #             if query == keywords[-1]:
-            #                 sys.exit('Maximum number of empty tweet strings reached - exiting')
-            #             else:
-            #                 print('Maximum number of empty tweet strings reached - breaking')
-            #                 break
+                    if len(tweets_tosave) % 1000 == 0:
+                        fname = dx.format_date_str(tweets_tosave[-1]['created_at'], '%a %b %d %H:%M:%S %z %Y', '%d-%m-%y_%H-%M-%S') + '_' + str(tweets_tosave[-1]['id'])
+                        fx.save_json('data/' + query + '/' + str(fname), tweets_tosave)
+                        tweets_tosave = []
 
     def get_user_details(self, username):
         try:
@@ -189,7 +138,7 @@ class TwitterManager(object):
             if e.api_code == 63 or e.api_code == 50:
                 return True
 
-    def get_user_timeline(username):
+    def get_user_timeline(self, username):
         try:
             print('reading: ' + str(username))
             status = self.api.user_timeline(username)
@@ -200,12 +149,6 @@ class TwitterManager(object):
 
             print('error: ' + str(e))
             return False
-
-
-
-
-
-
 
 
 

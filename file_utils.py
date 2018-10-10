@@ -154,6 +154,22 @@ def create_folder(folder):
     os.makedirs(os.path.dirname(folder + '/'), exist_ok=True)
 
 
+# function to flatten arrays from json files
+def get_values(lVals):
+    res = []
+    for val in lVals:
+        if type(val) not in [list, set, tuple]:
+            res.append(val)
+        else:
+            res.extend(get_values(val))
+    return res
+
+
+def load_json(fname):
+    with open(fname) as f:
+        data = json.load(f)
+    return data
+
 # save data in a json file
 def save_json(fname, data):
 
