@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.stats import entropy as H
+import scipy as sp
 
 def find_common(arrays_):
     '''
@@ -12,26 +12,37 @@ def find_max(*args):
     all = sum(args, [])
     return max(all)
 
-# function to calculate probability distributions and weights to calculate the JS divergence from an array of distributions
-def get_prob_dist(dists):
-    prob_distributions = np.array(dists)
-    n = len(prob_distributions)
-    weights = np.empty(n)
-    return prob_distributions, weights.fill(1/n)
+
+# flatten/merge a list of arrays
+def flatten_list(arrays_):
+    return [item for sublist in arrays_ for item in sublist]
 
 
 # Jensen-Shannon Divergence from https://stackoverflow.com/questions/15880133/jensen-shannon-divergence#27432724
 # https://en.wikipedia.org/wiki/Jensen%E2%80%93Shannon_divergence
-def JSD(prob_distributions, weights, logbase=2):
-    # left term: entropy of misture
-    wprobs = weights * prob_distributions
-    mixture = wprobs.sum(axis=0)
-    entropy_of_mixture = H(mixture, base=logbase)
+def get_jsd(p, q, base=2):
+    # https://gist.github.com/zhiyzuo/f80e2b1cfb493a5711330d271a228a3d
 
-    # right term: sum of entropies
-    entropies = np.array([H(P_i, base=logbase) for P_i in prob_distributions])
-    wentropies = weights * entropies
-    sum_of_entropies = wentropies.sum()
+    ## convert to np.array
+    p, q = np.asarray(p), np.asarray(q)
 
-    divergence = entropy_of_mixture - sum_of_entropies
-    return(divergence)
+    ## normalize p, q to probabilities
+    p, q = p/p.sum(), q/q.sum()
+    m = 1./2*(p + q)
+
+    jsd = sp.stats.entropy(p,m, base=base)/2. + sp.stats.entropy(q, m, base=base)/2.
+
+    # print(jsd)
+
+    return jsd
+
+
+
+# calculate cosine similarity
+def get_cosim(corpus_01, corpus_02):
+    return np.dot(corpus_01, corpus_02)/(np.linalg.norm(corpus_01)*np.linalg.norm(corpus_02))
+
+
+# calculate euclidean distance
+def get_ecd(corpus_01, corpus_02):
+    return np.linalg.norm(corpus_01 - corpus_02)
