@@ -41,7 +41,10 @@ class TwitterManager(object):
 
         tweet = self.get_query(query, count, until=date)
 
-        return tweet['statuses'][0]['id']
+        if len(tweet['statuses']) > 0:
+            return tweet['statuses'][0]['id']
+        else:
+            return False
 
     def get_query(self, query, max_tweets, **kwargs):
         ''' Function that takes in a search string 'query', the maximum
@@ -62,7 +65,7 @@ class TwitterManager(object):
 
                 print('found', len(tweets['statuses']), 'tweets')
 
-                if not tweets:
+                if len(tweets['statuses']) == 0:
                     print('no tweets found')
                     self.search = False
                     break
@@ -118,15 +121,20 @@ class TwitterManager(object):
                         self.max_id = self.get_tweet_id(query, 1, end)
                         since_id = self.get_tweet_id(query, 1, start)
                         self.initial = False
+                        if since_id is False:
+                            pass
 
                     tweets = self.get_search_page(query, max_tweets, since_id, self.max_id)
 
-                    tweets_tosave.extend(tweets)
+                    if tweets:
+                        tweets_tosave.extend(tweets)
 
-                    if len(tweets_tosave) % 1000 == 0:
-                        fname = dx.format_date_str(tweets_tosave[-1]['created_at'], '%a %b %d %H:%M:%S %z %Y', '%d-%m-%y_%H-%M-%S') + '_' + str(tweets_tosave[-1]['id'])
-                        fx.save_json('data/' + query + '/' + str(fname), tweets_tosave)
-                        tweets_tosave = []
+                        if len(tweets_tosave) >= 1000:
+                            fname = dx.format_date_str(tweets_tosave[-1]['created_at'], '%a %b %d %H:%M:%S %z %Y', '%d-%m-%y_%H-%M-%S') + '_' + str(tweets_tosave[-1]['id'])
+                            fx.save_json('data/' + query + '/' + str(fname), tweets_tosave)
+                            tweets_tosave = []
+                    else:
+                        pass
 
     def get_user_details(self, username):
         try:
