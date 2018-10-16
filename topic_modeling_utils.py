@@ -249,7 +249,7 @@ class build_model(object):
 
         for idx, topic in enumerate(model.components_[:self.topics]):
             topic_vectors.append(topic.argsort()[:-10 - 1:-1])
-    
+
         return topic_vectors
 
     def get_topic_dist_avg(self):

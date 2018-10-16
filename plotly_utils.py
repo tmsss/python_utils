@@ -1,12 +1,14 @@
-import plotly.plotly as py
+# import plotly.plotly as py
 import plotly.graph_objs as go
 import plotly.offline as offline
-from plotly.graph_objs import Figure, Layout
+# from plotly.graph_objs import Figure, Layout
 from plotly import tools
-import numpy as np
+import cufflinks as cf
+cf.go_offline()
+# import numpy as np
 import networkx as nx
 import community
-import seaborn as sns
+# import seaborn as sns
 from python_utils import matrix_utils as mx
 
 # offline.init_notebook_mode()
@@ -382,3 +384,10 @@ def draw_lines_chart(columns, title, **kwargs):
         ]
 
     draw_chart(title, data, layout=layout, image='png')
+
+
+def draw_cf_heatmap(df, title, colorscale):
+    # df = cf.datagen.heatmap(5,5)
+    # print(df.to_iplot())
+    fig = df.iplot(kind='heatmap', colorscale=colorscale, title=title, asFigure=True)
+    offline.plot(fig, filename=title + '.html')
