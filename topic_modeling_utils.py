@@ -256,7 +256,8 @@ class build_model(object):
         """
         get measure to calculate distance between corpus https://stats.stackexchange.com/questions/102932/comparing-topic-distributions-between-corpora-using-latent-dirichlet-allocation/102981#102981?newreg=785582e9497e44b6b317bc3f098cfb3d
         """
-        return np.average(np.array(self.get_topic_weights()), axis=0)
+        # return np.average(np.array(self.get_topic_weights()), axis=0)
+        return np.array(self.get_topic_weights())
 
     # performing similarity queries
     def most_similar(self, x, Z, top_n=5):
