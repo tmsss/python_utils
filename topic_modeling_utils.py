@@ -102,13 +102,20 @@ class build_model(object):
             text = [word + '_' + entity for word, entity in text]
 
         # print(" ".join(text))
-        return " ".join(text)
+        if 'w2v' in self.attributes:
+            return text
+        else:
+            return " ".join(text)
 
     @fx.timer
     def transform(self):
         train, test = self.load_data()
         train[self.field] = train[self.field].map(lambda x: self.clean_data(x))
-        docs = train[self.field]
+
+        if 'w2v' in self.attributes:
+            docs = train[self.field].tolist()
+        else:
+            docs = train[self.field]
 
         vectors = self.vectorizer.fit_transform(docs)
         model_fit = self.model.fit_transform(vectors)
