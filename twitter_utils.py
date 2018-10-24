@@ -68,6 +68,7 @@ class TwitterManager(object):
                 if len(tweets['statuses']) == 0:
                     print('no tweets found')
                     self.search = False
+                    self.initial = True
                     break
 
                 searched_tweets.extend(tweets['statuses'])
@@ -99,7 +100,7 @@ class TwitterManager(object):
         # creating a new file for each
         for query in keywords:
 
-            self.search == True
+            self.search = True
 
             print('Search phrase =', query)
             fx.create_folder('data/' + query)
