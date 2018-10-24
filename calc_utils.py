@@ -1,5 +1,6 @@
 import numpy as np
 import scipy as sp
+import io
 
 def find_common(arrays_):
     '''
@@ -32,10 +33,7 @@ def get_jsd(p, q, base=2):
 
     jsd = sp.stats.entropy(p,m, base=base)/2. + sp.stats.entropy(q, m, base=base)/2.
 
-    # print(jsd)
-
     return jsd
-
 
 
 # calculate cosine similarity

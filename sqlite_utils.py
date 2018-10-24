@@ -1,5 +1,7 @@
 import sqlite3
 import pandas as pd
+import io
+import numpy as np
 import dask
 import dask.dataframe as dd
 
@@ -85,23 +87,6 @@ def select_sql_pd_limit(db, table, fields, field, value, limit):
     return df
 
 
-def db_hdf(database, table, chunksize, offset, fname):
-    conn = connect_db(database)
-    store = pd.HDFStore(fname, mode='a')
-
-    while True:
-        query = "SELECT * FROM %s limit %s offset %s;" % (table, chunksize, offset)
-        df = pd.read_sql_query(query, conn)
-        offset += chunksize
-        # df.to_hdf(file, 'tweets', append=True, mode='a')
-        # store.append('tweets', df, min_itemsize={ 'values_block_1' : 2500 })
-        store.append('tweets', df, data_columns=df.columns, min_itemsize=2000, index=False)
-
-        if df.shape[0] < chunksize:
-            store.close()
-            break
-
-
 def query_sql_pd(db, table, fields, order, direction, limit):
     conn = connect_db(db)
 
@@ -159,3 +144,23 @@ def db_ddf_slice(db, table, columns, partitions, chunksize, offset, slice):
 
     print('table ' + table + ' loaded into dask dataframe')
     return final
+
+
+# convert array in order to save it in sqlite db
+def adapt_array(arr):
+    """
+    http://stackoverflow.com/a/31312102/190597 (SoulNibbler)
+    """
+    # zlib uses similar disk size that Matlab v5 .mat files
+    # bz2 compress 4 times zlib, but storing process is 20 times slower.
+    out = io.BytesIO()
+    np.save(out, arr)
+    out.seek(0)
+    return sqlite3.Binary(out.read())  # zlib, bz2
+
+
+def convert_array(text):
+    out = io.BytesIO(text)
+    out.seek(0)
+    out = io.BytesIO(out.read())
+    return np.load(out)

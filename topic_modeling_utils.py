@@ -251,20 +251,16 @@ class build_model(object):
         plt.show()
 
     def get_topic_weights(self):
+        """
+        get measure to calculate distance between corpus https://stats.stackexchange.com/questions/102932/comparing-topic-distributions-between-corpora-using-latent-dirichlet-allocation/102981#102981?newreg=785582e9497e44b6b317bc3f098cfb3d
+        """
         docs, model, vectors, fit, vectorizer = self.check_model()
         topic_vectors = []
 
         for idx, topic in enumerate(model.components_[:self.topics]):
             topic_vectors.append(topic.argsort()[:-10 - 1:-1])
 
-        return topic_vectors
-
-    def get_topic_dist_avg(self):
-        """
-        get measure to calculate distance between corpus https://stats.stackexchange.com/questions/102932/comparing-topic-distributions-between-corpora-using-latent-dirichlet-allocation/102981#102981?newreg=785582e9497e44b6b317bc3f098cfb3d
-        """
-        # return np.average(np.array(self.get_topic_weights()), axis=0)
-        return np.array(self.get_topic_weights())
+        return np.array(topic_vectors)
 
     # performing similarity queries
     def most_similar(self, x, Z, top_n=5):

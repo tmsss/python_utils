@@ -1,7 +1,8 @@
 # import plotly.plotly as py
 import plotly.graph_objs as go
 import plotly.offline as offline
-# from plotly.graph_objs import Figure, Layout
+import plotly.io as pio
+from plotly.graph_objs import Figure, Layout
 from plotly import tools
 import cufflinks as cf
 cf.go_offline()
@@ -13,6 +14,12 @@ from python_utils import matrix_utils as mx
 
 # offline.init_notebook_mode()
 
+'''
+colorscale options
+'Greys' | 'Greens' | 'Bluered' | 'Hot' | 'Picnic' | 'Portland' |
+'Jet' | 'RdBu' | 'Blackbody' | 'Earth' | 'Electric' | 'YIOrRd' | 'YIGnBu'
+'''
+
 # colors rgb values
 rgb = [
     (75, 175, 79),
@@ -20,6 +27,14 @@ rgb = [
     (253, 86, 33),
     (253, 192, 6),
     (14, 166, 136)
+    ]
+
+# from paired https://plot.ly/pandas/colorlover/
+rgb2 = [
+    (31, 120, 180),
+    (51, 160, 44),
+    (227, 26, 28),
+    (255, 127, 0)
     ]
 
 
@@ -30,6 +45,8 @@ def color(rgb, opacity):
 def get_axis(columns, type, horizontal=False):
         data = []
         idx = 0
+
+        rgb = rgb2
 
         for (x, y, label) in columns:
             trace = 'trace_{0}'.format(idx)
@@ -227,6 +244,42 @@ def stacked_bar_chart(columns, title):
 
     draw_chart(title, data, layout=layout, image='svg')
 
+def scatter_chart(title, x, y1, y2, line):
+
+    trace0 = go.Scatter(
+        x = x,
+        y = y1,
+        mode = 'markers',
+        name = 'markers'
+    )
+    trace1 = go.Scatter(
+        x = x,
+        y = y2,
+        mode = 'markers',
+        name = 'markers'
+    )
+
+    trace2 = go.Scatter(
+                  x=x,
+                  y=line,
+                  mode='lines',
+                  marker=go.Marker(color='rgb(31, 119, 180)'),
+                  name='Fit'
+                  )
+
+    data = [trace0, trace1, trace2]
+
+    layout = go.Layout(
+        # autosize=False,
+        # width=2500,
+        # height=2000,
+        title=title,
+        xaxis=dict(ticks=''),
+        yaxis=dict(ticks='', tickfont=dict(size=12)),
+        margin=dict(b=40, l=120, r=5, t=40, pad=5)
+    )
+
+    draw_chart(title, data, layout=layout, image='png')
 
 def network_chart(df, title, layout='spring'):
 
@@ -273,9 +326,6 @@ def network_chart(df, title, layout='spring'):
         hoverinfo='text',
         marker=dict(
             showscale=True,
-            # colorscale options
-            # 'Greys' | 'Greens' | 'Bluered' | 'Hot' | 'Picnic' | 'Portland' |
-            # Jet' | 'RdBu' | 'Blackbody' | 'Earth' | 'Electric' | 'YIOrRd' | 'YIGnBu'
             colorscale='YlGnBu',
             reversescale=True,
             color=[],
@@ -337,11 +387,18 @@ def draw_heatmap(df, columns, title, colorscale):
     ]
 
     layout = go.Layout(
+        autosize=False,
+        width=2500,
+        height=2000,
         title=title,
         xaxis=dict(ticks='', nticks=len(df[columns[0]])),
-        yaxis=dict(ticks='', nticks=len(df[columns[1]])),
-        margin=dict(b=40, l=80, r=5, t=40, pad=5)
+        yaxis=dict(ticks='', nticks=len(df[columns[1]]), tickfont=dict(size=12)),
+        margin=dict(b=40, l=120, r=5, t=40, pad=5)
     )
+
+    # fig = Figure(data=data, layout=layout)
+
+    # pio.write_image(fig, 'images/fig1.pdf')
 
     draw_chart(title, data, layout=layout, image='png')
 
@@ -351,9 +408,13 @@ def draw_lines_chart(columns, title, **kwargs):
     data = get_axis(columns, 'lines', horizontal=False)
 
     layout = go.Layout(
+        autosize=False,
+        width=2000,
+        height=1000,
         title=title,
-        # xaxis=dict(ticks='', nticks=length_x),
-        # yaxis=dict(ticks=''),
+        xaxis=dict(ticks=''),
+        yaxis=dict(ticks='', tickfont=dict(size=14)),
+        margin=dict(b=40, l=120, r=5, t=40, pad=5)
     )
 
     if 'annotations' in kwargs:
@@ -390,4 +451,14 @@ def draw_cf_heatmap(df, title, colorscale):
     # df = cf.datagen.heatmap(5,5)
     # print(df.to_iplot())
     fig = df.iplot(kind='heatmap', colorscale=colorscale, title=title, asFigure=True)
+
+    # remove ticks from axis
+    fig['layout']['xaxis'].update({'ticks': ''})
+    fig['layout']['yaxis'].update({'ticks': ''})
+
+    # margin configuration
+    fig['layout']['margin'].update({'b': 40, 'l': 120, 'r': 5, 't': 40, 'pad': 5})
+
+    fig['layout'].update({'autosize': False, 'width': 2000, 'height': 1000})
+
     offline.plot(fig, filename=title + '.html')
