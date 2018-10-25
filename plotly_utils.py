@@ -45,6 +45,7 @@ def color(rgb, opacity):
 def get_axis(columns, type, horizontal=False):
         data = []
         idx = 0
+        dash = ['dash', 'dot', 'dashdot']
 
         rgb = rgb2
 
@@ -86,6 +87,9 @@ def get_axis(columns, type, horizontal=False):
                         width=1)
                 )
 
+            if idx >=1:
+                trace['line']['dash'] = dash[idx - 1]
+
             idx += 1
             data.append(trace)
         # print(len(data))
@@ -105,6 +109,10 @@ def draw_chart(title, data, **kwargs):
         offline.plot(data_dict, image=kwargs['image'], image_filename=title, filename=fname)
     else:
         offline.plot(data_dict, fname)
+
+    if kwargs['format'] == 'pdf':
+        figure = Figure(data=data, layout=kwargs['layout'])
+        pio.write_image(figure, title + '.pdf')
 
 
 def pandas_bar_chart(x_col, y_col, title):
@@ -396,14 +404,10 @@ def draw_heatmap(df, columns, title, colorscale):
         margin=dict(b=40, l=120, r=5, t=40, pad=5)
     )
 
-    # fig = Figure(data=data, layout=layout)
-
-    # pio.write_image(fig, 'images/fig1.pdf')
-
     draw_chart(title, data, layout=layout, image='png')
 
 
-def draw_lines_chart(columns, title, **kwargs):
+def draw_lines_chart(columns, title, format='pdf', **kwargs):
 
     data = get_axis(columns, 'lines', horizontal=False)
 
@@ -412,39 +416,36 @@ def draw_lines_chart(columns, title, **kwargs):
         width=2000,
         height=1000,
         title=title,
-        xaxis=dict(ticks=''),
-        yaxis=dict(ticks='', tickfont=dict(size=14)),
+        legend=dict(orientation="h", font=dict(size=16)),
+        xaxis=dict(ticks='', tickfont=dict(size=16)),
+        yaxis=dict(ticks='', tickfont=dict(size=16)),
         margin=dict(b=40, l=120, r=5, t=40, pad=5)
     )
 
     if 'annotations' in kwargs:
         layout['annotations'] = [dict(
-            x=kwargs['length_x'] / 2,
-            y=kwargs['max_y'],
+            x=kwargs['x'],
+            y=kwargs['y'],
             xref='x',
             yref='y',
             text=kwargs['text'],
             showarrow=False,
-            # font=dict(
-            #     family='Courier New, monospace',
-            #     size=16,
-            #     color='#ffffff'
-            # ),
-            # align='center',
+            font=dict(size=14),
+            align='left',
             # arrowhead=2,
             # arrowsize=1,
             # arrowwidth=2,
             # arrowcolor='#636363',
             # ax=-1,
             # ay=30,
-            bordercolor=color(rgb[3], 1.0),
-            borderwidth=2,
-            borderpad=4,
-            bgcolor=color(rgb[3], 1.0),
-            opacity=0.8)
+            bordercolor='rgb(68, 68, 68)',
+            borderwidth=3,
+            borderpad=8,
+            # bgcolor=color(rgb[3], 1.0),
+            opacity=1)
         ]
 
-    draw_chart(title, data, layout=layout, image='png')
+    draw_chart(title, data, layout=layout, format=format, image='png')
 
 
 def draw_cf_heatmap(df, title, colorscale):
