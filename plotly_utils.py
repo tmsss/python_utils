@@ -2,15 +2,15 @@
 import plotly.graph_objs as go
 import plotly.offline as offline
 import plotly.io as pio
-from plotly.graph_objs import Figure, Layout
+from plotly.graph_objs import Figure
 from plotly import tools
 import cufflinks as cf
 cf.go_offline()
 # import numpy as np
-import networkx as nx
-import community
+# import networkx as nx
+# import community
 # import seaborn as sns
-from python_utils import matrix_utils as mx
+# from python_utils import matrix_utils as mx
 
 # offline.init_notebook_mode()
 
@@ -108,13 +108,12 @@ def draw_chart(title, data, **kwargs):
     if 'image' in kwargs:
         offline.plot(data_dict, image=kwargs['image'], image_filename=title, filename=fname)
     else:
-        offline.plot(data_dict, fname)
+        offline.plot(data_dict, filename=fname)
 
     # orca export formats: 'png', 'jpeg', 'webp', 'svg', 'pdf', or 'eps'.
-    if kwargs['format'] in kwargs:
+    if 'format' in kwargs:
         figure = Figure(data=data, layout=kwargs['layout'])
         pio.write_image(figure, title + '.' + kwargs['format'])
-
 
 def pandas_bar_chart(x_col, y_col, title):
 
@@ -146,7 +145,6 @@ def pandas_bar_chart(x_col, y_col, title):
         )
 
     draw_chart(title, data, layout=layout)
-
 
 
 def bar_chart(columns, title, horizontal=False, **kwargs):
@@ -384,7 +382,7 @@ def network_chart(df, title, layout='spring'):
     draw_chart(title, data, layout=layout, image='png')
 
 
-def draw_heatmap(df, columns, title, colorscale):
+def draw_heatmap(df, columns, title, colorscale, format='pdf'):
     # sns.heatmap(df, annot=True)
     data = [
         go.Heatmap(
@@ -405,7 +403,7 @@ def draw_heatmap(df, columns, title, colorscale):
         margin=dict(b=40, l=120, r=5, t=40, pad=5)
     )
 
-    draw_chart(title, data, layout=layout, image='png')
+    draw_chart(title, data, layout=layout, format=format)
 
 
 def draw_lines_chart(columns, title, format='pdf', **kwargs):
@@ -418,9 +416,9 @@ def draw_lines_chart(columns, title, format='pdf', **kwargs):
         height=1000,
         title=title,
         legend=dict(orientation="h", font=dict(size=16)),
-        xaxis=dict(ticks='', tickfont=dict(size=16)),
-        yaxis=dict(ticks='', tickfont=dict(size=16)),
-        margin=dict(b=40, l=120, r=5, t=40, pad=5)
+        xaxis=dict(ticks='', tickfont=dict(size=18)),
+        yaxis=dict(ticks='', tickfont=dict(size=18)),
+        margin=dict(b=40, l=100, r=5, t=40, pad=5)
     )
 
     if 'annotations' in kwargs:
@@ -446,21 +444,22 @@ def draw_lines_chart(columns, title, format='pdf', **kwargs):
             opacity=1)
         ]
 
-    draw_chart(title, data, layout=layout, format=format, image='png')
+    draw_chart(title, data, format, layout=layout)
 
 
-def draw_cf_heatmap(df, title, colorscale):
+def draw_cf_heatmap(df, title, colorscale, format):
     # df = cf.datagen.heatmap(5,5)
     # print(df.to_iplot())
-    fig = df.iplot(kind='heatmap', colorscale=colorscale, title=title, asFigure=True)
+    figure = df.iplot(kind='heatmap', colorscale=colorscale, title=title, asFigure=True)
 
-    # remove ticks from axis
-    fig['layout']['xaxis'].update({'ticks': ''})
-    fig['layout']['yaxis'].update({'ticks': ''})
+    # remove ticks from axis and axis font configuration
+    figure['layout']['xaxis'].update({'ticks': '', 'tickfont': dict(size=18)})
+    figure['layout']['yaxis'].update({'ticks': '', 'tickfont': dict(size=18)})
 
     # margin configuration
-    fig['layout']['margin'].update({'b': 40, 'l': 120, 'r': 5, 't': 40, 'pad': 5})
+    figure['layout']['margin'].update({'b': 40, 'l': 120, 'r': 5, 't': 40, 'pad': 5})
 
-    fig['layout'].update({'autosize': False, 'width': 2000, 'height': 1000})
+    figure['layout'].update({'autosize': False, 'width': 2500, 'height': 2000})
 
-    offline.plot(fig, filename=title + '.html')
+    offline.plot(figure, filename=title + '.html')
+    pio.write_image(figure, title + '.' + format)
