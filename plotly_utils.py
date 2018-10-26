@@ -110,9 +110,10 @@ def draw_chart(title, data, **kwargs):
     else:
         offline.plot(data_dict, fname)
 
-    if kwargs['format'] == 'pdf':
+    # orca export formats: 'png', 'jpeg', 'webp', 'svg', 'pdf', or 'eps'.
+    if kwargs['format'] in kwargs:
         figure = Figure(data=data, layout=kwargs['layout'])
-        pio.write_image(figure, title + '.pdf')
+        pio.write_image(figure, title + '.' + kwargs['format'])
 
 
 def pandas_bar_chart(x_col, y_col, title):
