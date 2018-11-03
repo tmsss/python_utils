@@ -3,6 +3,7 @@ import plotly.graph_objs as go
 import plotly.offline as offline
 import plotly.io as pio
 from plotly.graph_objs import Figure
+import plotly.figure_factory as ff
 from plotly import tools
 import cufflinks as cf
 cf.go_offline()
@@ -445,6 +446,28 @@ def draw_lines_chart(columns, title, format='pdf', **kwargs):
         ]
 
     draw_chart(title, data, format, layout=layout)
+
+
+def draw_dendogram(data, title, labels, format):
+
+    figure = ff.create_dendrogram(data, orientation='left', labels=labels)
+
+    figure['layout']['title'] = title
+
+    # remove ticks from axis, change font size and remove lines in xaxis
+    figure['layout']['xaxis'].update({'ticks': '', 'tickfont': dict(size=18)})
+    figure['layout']['yaxis'].update({'ticks': '', 'tickfont': dict(size=18), 'showline': False})
+
+
+    # margin configuration
+    figure['layout']['margin'].update({'b': 40, 'l': 120, 'r': 5, 't': 40, 'pad': 5})
+
+    figure['layout'].update({'autosize': False, 'width': 2500, 'height': 2000})
+
+    fname = title + '_dendogram'
+
+    offline.plot(figure, filename=fname + '.html')
+    pio.write_image(figure, fname + '.' + format)
 
 
 def draw_cf_heatmap(df, title, colorscale, format):
