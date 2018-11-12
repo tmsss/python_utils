@@ -170,3 +170,62 @@ def start_mining(keywords):
 
 
 # start_mining(['#eleicaobrasil', '#eleiçãobrasil'])
+
+#import json
+#from tweepy import Cursor
+#from twitter_client import get_twitter_client
+#
+#
+#if __name__ == '__main__':
+#  client = get_twitter_client()
+#
+#  with open('home_timeline.jsonl', 'w') as f:
+#      for page in Cursor(client.home_timeline, count=200).pages(4):
+#          for status in page:
+#              f.write(json.dumps(status._json)+"\n")
+
+#import string
+#import time
+#from tweepy import Stream
+#from tweepy.streaming import StreamListener
+#from twitter_client import get_twitter_auth
+#
+#class CustomListener(StreamListener):
+#        def __init__(self, fname):
+#            safe_fname = format_filename(fname)
+#            self.outfile ="stream_%s.jsonl" %safe_fname
+#
+#        def on_data(self,data):
+#            try:
+#                with open(self.outfile, 'a') as f:
+#                    f.write(data)
+#                    return True
+#            except BaseException as e:
+#                    sys.stderr.write("Error on_data: {}\n".format(e))
+#                    time.sleep(5)
+#            return True
+#
+#        def on_error(selg, status):
+#            if status == 420:
+#                sys.stderr.write("Rate limit exceeded\n")
+#                return False
+#            else:
+#                sys.stderr.write("Error {}\n".format(status))
+#                return True
+#
+#def format_filename(fname):
+#    return ' '.join(convert_valid(one_char) for one_char in fname)
+#
+#def convert_valid(one_char):
+#    valid_chars ="-_.%s%s" % (string.ascii_letters, string.digits)
+#    if one_char in valid_chars:
+#        return one_char
+#    else:
+#        return '_'
+#
+#if __name__ == '__main__':
+#    query = sys.argv[1:]
+#    query_fname = ' '.join(query)
+#    auth = get_twitter_auth()
+#    twitter_stream = Stream(auth, CustomListener(query_fname))
+#    twitter_stream.filter(track=query, async=True)
