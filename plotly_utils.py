@@ -7,6 +7,7 @@ import plotly.figure_factory as ff
 from plotly import tools
 import cufflinks as cf
 cf.go_offline()
+from python_utils import calc_utils as cx
 # import numpy as np
 # import networkx as nx
 # import community
@@ -69,14 +70,9 @@ def get_axis(columns, type, horizontal=False):
                     x=x,
                     y=y,
                     name=label,
-                    mode='lines+markers'
-                    # marker=dict(
-                    #     color=color(rgb[0], 0.5),
-                    #     line=dict(
-                    #         color=color(rgb[0], 1.0),
-                    #         width=1)
-                    #         )
-                        )
+                    mode='lines+markers',
+                    line=dict(width=4)
+                    )
             if horizontal:
                 trace['orientation'] = 'h'
 
@@ -85,7 +81,7 @@ def get_axis(columns, type, horizontal=False):
                     color=color(rgb[idx], 0.5),
                     line=dict(
                         color=color(rgb[idx], 1.0),
-                        width=1)
+                        width=3)
                 )
 
             if idx >=1:
@@ -416,7 +412,7 @@ def draw_lines_chart(columns, title, format='pdf', **kwargs):
         width=2000,
         height=1000,
         title=title,
-        legend=dict(orientation="h", font=dict(size=16)),
+        legend=dict(orientation="h", font=dict(size=18)),
         xaxis=dict(ticks='', tickfont=dict(size=18)),
         yaxis=dict(ticks='', tickfont=dict(size=18)),
         margin=dict(b=40, l=100, r=5, t=40, pad=5)
@@ -445,29 +441,32 @@ def draw_lines_chart(columns, title, format='pdf', **kwargs):
             opacity=1)
         ]
 
-    draw_chart(title, data, format, layout=layout)
+    draw_chart(title, data, format=format, layout=layout)
 
 
 def draw_dendogram(data, title, labels, format):
 
-    figure = ff.create_dendrogram(data, orientation='left', labels=labels)
+    figure = ff.create_dendrogram(data, orientation='left', labels=labels, linkagefun=lambda x: cx.get_linkage(data, 'single', 'euclidean'))
 
     figure['layout']['title'] = title
 
     # remove ticks from axis, change font size and remove lines in xaxis
-    figure['layout']['xaxis'].update({'ticks': '', 'tickfont': dict(size=18)})
-    figure['layout']['yaxis'].update({'ticks': '', 'tickfont': dict(size=18), 'showline': False})
+    figure['layout']['xaxis'].update({'ticks': '', 'tickfont': dict(size=24)})
+    figure['layout']['yaxis'].update({'ticks': '', 'tickfont': dict(size=24), 'showline': False})
 
 
     # margin configuration
-    figure['layout']['margin'].update({'b': 40, 'l': 120, 'r': 5, 't': 40, 'pad': 5})
+    figure['layout']['margin'].update({'b': 40, 'l': 200, 'r': 15, 't': 40, 'pad': 5})
 
-    figure['layout'].update({'autosize': False, 'width': 2500, 'height': 2000})
+    figure['layout'].update({'autosize': False, 'width': 1000, 'height': 1500})
 
     fname = title + '_dendogram'
 
-    offline.plot(figure, filename=fname + '.html')
-    pio.write_image(figure, fname + '.' + format)
+    if format == 'pdf':
+        pio.write_image(figure, fname + '.' + format)
+    else:
+        offline.plot(figure, filename=fname + '.html')
+
 
 
 def draw_cf_heatmap(df, title, colorscale, format):

@@ -4,9 +4,11 @@ import dask
 import dask.dataframe as dd
 import io
 import json
+import itertools
 from python_utils import sqlite_utils as dbx
 from python_utils import file_utils as fx
 from python_utils import date_utils as dx
+from python_utils import calc_utils as cx
 
 
 # check if it is a pandas or dask dataframe
@@ -285,3 +287,21 @@ def get_tweets_by_month(start, end, num, db, table, fields, date_field):
             df = dbx.select_sql_pd_limit(db, table, fields, date_field, i, num)
             final = pd.concat([df, final])
         return df
+
+
+# get a euclidean distance matrix from a pandas field
+def get_ecd_mx(df, labels, field):
+        mx = df[[labels, field]]
+
+        # build tuples with all possible combinations of indexes
+        combinations = [p for p in itertools.product(
+            list(range(0, len(mx[field].values))), repeat=2)]
+
+        arr_ = []
+        for ix, jx in combinations:
+            arr_.append(cx.get_ecd(mx[field][ix], mx[field][jx]))
+
+        arr_ = np.array_split(arr_, len(mx[field].values))
+        nx = pd.DataFrame(arr_, columns=df[labels], index=df[labels])
+        return nx
+        
