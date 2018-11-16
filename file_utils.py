@@ -5,6 +5,7 @@ import time
 import gc
 from functools import wraps
 from inspect import isfunction
+from python_utils import calc_utils as cx
 
 
 def timer(f):
@@ -46,9 +47,13 @@ def get_filepaths(directory):
     #  Walk the tree.
     for root, directories, files in os.walk(directory):
         for filename in files:
+            filename = filename
             #  Join the two strings in order to form the full filepath.
             filepath = os.path.join(root, filename)
-            file_paths.append(filepath)  # Add it to the list.
+            # replace '\\' with '/'
+            filepath = filepath.replace('\\', '/')
+            # Add it to the list.
+            file_paths.append(filepath)
 
     return file_paths
 
@@ -165,10 +170,15 @@ def get_values(lVals):
     return res
 
 
-def load_json(fname):
+def read_json(fname, nested=False):
     with open(fname) as f:
         data = json.load(f)
+
+    if nested:
+        data = cx.get_values(data)
+
     return data
+
 
 # save data in a json file
 def save_json(fname, data):

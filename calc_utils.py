@@ -20,6 +20,17 @@ def flatten_list(arrays_):
     return [item for sublist in arrays_ for item in sublist]
 
 
+# flatten json files
+def get_values(lVals):
+    res = []
+    for val in lVals:
+        if type(val) not in [list, set, tuple]:
+            res.append(val)
+        else:
+            res.extend(get_values(val))
+    return res
+
+
 # Jensen-Shannon Divergence from https://stackoverflow.com/questions/15880133/jensen-shannon-divergence#27432724
 # https://en.wikipedia.org/wiki/Jensen%E2%80%93Shannon_divergence
 def get_jsd(p, q, base=2):

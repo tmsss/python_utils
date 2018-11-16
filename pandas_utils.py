@@ -191,6 +191,16 @@ def json_pd(fname, orient):
     return df
 
 
+# read nested json
+def njson_pd(fname):
+    with io.open(fname, encoding='utf-8') as f:
+        data = json.load(f)
+
+    data = cx.get_values(data)
+    df = pd.DataFrame(data)
+    return df
+
+
 # save dataframe to csv
 def save_to_csv(df, fname):
         df.to_csv(fname + '.csv', sep=',', encoding='utf-8', index=False)
@@ -304,4 +314,3 @@ def get_ecd_mx(df, labels, field):
         arr_ = np.array_split(arr_, len(mx[field].values))
         nx = pd.DataFrame(arr_, columns=df[labels], index=df[labels])
         return nx
-        

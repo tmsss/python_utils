@@ -51,6 +51,29 @@ def delete_rows(db, table, where, data):
     # conn.commit()
 
 
+def create_table(db, table, columns, pk='', autoincrement=False):
+    conn = connect_db(db)
+    c = conn.cursor()
+    columns = ', '.join(columns)
+    if pk and autoincrement:
+        # print("CREATE TABLE IF NOT EXISTS %s (%s, %s INTEGER, PRIMARY KEY (%s));" % (table, pk, columns, pk))
+        c.execute("CREATE TABLE IF NOT EXISTS %s (%s INTEGER, %s, PRIMARY KEY (%s));" % (table, pk, columns, pk))
+
+    elif pk and not autoincrement:
+        c.execute("CREATE TABLE IF NOT EXISTS %s (%s, %s, PRIMARY KEY (%s));" % (table, pk, columns, pk))
+
+    else:
+        c.execute("CREATE TABLE IF NOT EXISTS %s %s" % (table, columns))
+    conn.close()
+
+
+def add_column(db, table, field, type):
+    conn = connect_db(db)
+    c = conn.cursor()
+    c.execute("ALTER TABLE %s ADD COLUMN %s %s" % (table, field, type))
+    conn.close()
+
+
 def insert_row(db, table, columns, values):
     conn = connect_db(db)
     c = conn.cursor()
@@ -61,7 +84,7 @@ def insert_row(db, table, columns, values):
 
     c.execute("CREATE TABLE IF NOT EXISTS %s %s" % (table, columns))
     c.execute("BEGIN TRANSACTION;")
-    c.execute("INSERT INTO %s %s VALUES %s;" % (table, columns, values))  # columns and values should be tuples
+    c.execute("INSERT OR IGNORE INTO %s %s VALUES %s;" % (table, columns, values))  # columns and values should be tuples
     c.execute("COMMIT;")
     conn.close()
 
@@ -70,7 +93,7 @@ def db_insert_many(db, table, wildcards, data):
     conn = connect_db(db)
     c = conn.cursor()
     c.execute("BEGIN TRANSACTION;")
-    c.executemany("INSERT INTO %s values(%s)" % (table, wildcards), data)
+    c.executemany("INSERT OR IGNORE INTO %s values(%s)" % (table, wildcards), data)
     c.execute("COMMIT;")
     conn.close()
 
