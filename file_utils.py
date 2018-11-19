@@ -199,6 +199,12 @@ def save_json(fname, data):
             json.dump(lst, f)
             print('%s records were saved in file %s.' % (len(data), fname))
 
+
+def logger(directory, fname, message):
+    logf = open(directory + '/' + fname + '.txt', 'a')
+    logf.write(message + '\n')
+
+
     # try:
     #     fname = fname + '.json'
     #
