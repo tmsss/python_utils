@@ -1,15 +1,15 @@
-import urllib.request
-import ssl
+# import urllib.request
+import requests
+# import ssl
 
 
-def fetch(url):
+def fetch(url, **kwargs):
     try:
-        request = urllib.request.Request(url)
-        response = urllib.request.urlopen(request, context=ssl._create_unverified_context(), timeout=10)
+        response = requests.get(url, kwargs)
         return response
     #  ignore errors
-    except urllib.error.URLError:
-        pass
+    # except Error:
+    #     pass
 
     except ValueError:
         pass
