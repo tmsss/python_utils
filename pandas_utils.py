@@ -124,6 +124,19 @@ def db_ddf(db, table, columns, partitions, chunksize, offset):
     return final
 
 
+@fx.timer
+def db_ddf_limit(db, table, columns, partitions, chunksize, offset):
+    conn = dbx.connect_db(db)
+    df = pd.DataFrame()
+
+    query = "SELECT * FROM %s limit %s offset %s;" % (table, chunksize, offset)
+    df = pd.read_sql_query(query, conn)
+    ddt = dd.from_pandas(df[columns], npartitions=partitions)
+
+    print('table ' + table + ' loaded into dask dataframe')
+    return ddt
+
+
 def df_ddf(df, partitions):
     df = dd.from_pandas(df, npartitions=partitions)
     return df
