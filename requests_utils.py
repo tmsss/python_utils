@@ -1,6 +1,4 @@
-# import urllib.request
 import requests
-# import ssl
 
 
 def fetch(url, **kwargs):
@@ -19,4 +17,10 @@ def fetch(url, **kwargs):
 
 
 def fetch_url(url):
-    return fetch(url).geturl()
+    response = fetch(url)
+
+    if response:
+        url = response.history[0].url if response.history else response.url
+        return url
+    else:
+        pass

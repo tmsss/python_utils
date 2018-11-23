@@ -20,6 +20,16 @@ def flatten_list(arrays_):
     return [item for sublist in arrays_ for item in sublist]
 
 
+# build list from dict
+def build_list_dict(array_, field_, list_):
+    return [array_.append(tag[field_]) or tag[field_]
+            for tag in list_]
+
+
+def build_list(array_, list_):
+    return [array_.append(ix) or ix for ix in list_]
+
+
 # flatten json files
 def get_values(lVals):
     res = []

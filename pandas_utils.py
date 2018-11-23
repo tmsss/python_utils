@@ -291,6 +291,24 @@ def groupby_sum(df, fields):
     return check_df(df)
 
 
+# from https://stackoverflow.com/questions/32468402/how-to-explode-a-list-inside-a-dataframe-cell-into-separate-rows
+@fx.timer
+def lateral_explode(df, fieldname):
+    temp_fieldname = fieldname + '_made_tuple_'
+    df[temp_fieldname] = df[fieldname].map(tuple)
+    list_of_dataframes = []
+    for values in df[temp_fieldname].unique().tolist():
+        list_of_dataframes.append(pd.DataFrame({
+            temp_fieldname: [values] * len(values),
+            fieldname: list(values),
+        }))
+    df = df[list(set(df.columns) - set([fieldname]))]\
+        .merge(pd.concat(list_of_dataframes), how='left', on=temp_fieldname)
+    del df[temp_fieldname]
+
+    return df
+
+
 def sum_multiple_df(df, fields):
 
     for field in fields[1:3]:

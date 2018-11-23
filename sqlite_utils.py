@@ -56,14 +56,13 @@ def create_table(db, table, columns, pk='', autoincrement=False):
     c = conn.cursor()
     columns = ', '.join(columns)
     if pk and autoincrement:
-        # print("CREATE TABLE IF NOT EXISTS %s (%s, %s INTEGER, PRIMARY KEY (%s));" % (table, pk, columns, pk))
         c.execute("CREATE TABLE IF NOT EXISTS %s (%s INTEGER, %s, PRIMARY KEY (%s));" % (table, pk, columns, pk))
 
     elif pk and not autoincrement:
         c.execute("CREATE TABLE IF NOT EXISTS %s (%s, %s, PRIMARY KEY (%s));" % (table, pk, columns, pk))
 
     else:
-        c.execute("CREATE TABLE IF NOT EXISTS %s %s" % (table, columns))
+        c.execute("CREATE TABLE IF NOT EXISTS %s (%s)" % (table, columns))
     conn.close()
 
 
