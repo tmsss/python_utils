@@ -16,8 +16,8 @@ def fetch(url, **kwargs):
         pass
 
 
-def fetch_url(url):
-    response = fetch(url)
+def fetch_url(url, **kwargs):
+    response = fetch(url, **kwargs)
 
     if response:
         url = response.history[0].url if response.history else response.url
