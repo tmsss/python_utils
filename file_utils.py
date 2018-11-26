@@ -200,6 +200,20 @@ def save_json(fname, data):
             print('%s records were saved in file %s.' % (len(data), fname))
 
 
+# save data in a json file
+def save_txt(fname, data):
+
+    if os.path.isfile(fname) is False:
+        with open(fname, 'w') as f:
+            f.write(data)
+    else:
+        with open(fname) as f:
+            txt = f.read(f) + '\n'
+
+        with open(fname, 'w') as f:
+            f.write(txt + data)
+
+
 def logger(directory, fname, message):
     logf = open(directory + '/' + fname + '.txt', 'a')
     logf.write(message + '\n')
