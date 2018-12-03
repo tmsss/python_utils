@@ -32,7 +32,7 @@ def update_field(db, table, where, field, type, data):
     if field not in columns:
         c.execute("ALTER TABLE " + table + " ADD COLUMN " + field + " " + type )
 
-    # c.executemany("UPDATE " + table + " SET " + field + " = ? WHERE " + where + " = ? ", (field_values, where_values))
+    # data tuple: (field, where)
     c.execute("BEGIN TRANSACTION;")
     c.executemany("UPDATE %s SET %s = ? WHERE %s = ?" % (table, field, where), data)
     c.execute("COMMIT;")

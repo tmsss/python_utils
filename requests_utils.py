@@ -20,7 +20,8 @@ def fetch_url(url, **kwargs):
     response = fetch(url, **kwargs)
 
     if response:
-        url = response.history[0].url if response.history else response.url
+        url = response.url if response.url else url
         return url
+
     else:
         pass
