@@ -41,6 +41,12 @@ def get_values(lVals):
     return res
 
 
+# iterate list in chunks
+# from https://stackoverflow.com/questions/434287/what-is-the-most-pythonic-way-to-iterate-over-a-list-in-chunks
+def chunker(seq, size):
+    return (seq[pos:pos + size] for pos in range(0, len(seq), size))
+    
+
 # Jensen-Shannon Divergence from https://stackoverflow.com/questions/15880133/jensen-shannon-divergence#27432724
 # https://en.wikipedia.org/wiki/Jensen%E2%80%93Shannon_divergence
 def get_jsd(p, q, base=2):

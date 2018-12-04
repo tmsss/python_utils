@@ -120,6 +120,7 @@ def pickle_fn(item, folder, filename):
     fname = folder + '/' + filename + '.pkl'
 
     if os.path.isfile(fname) is False:
+        create_folder(folder)
         if isfunction(item):
             item = item()
         save_pickle(fname, item)
