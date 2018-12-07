@@ -18,11 +18,14 @@ class ArticleManager(object):
     Get articles from websites and save them in folder
     '''
 
-    def __init__(self, domain):
-        self.df = fx.load_pickle('dataframes/df_links_unique.pkl')
+    def __init__(self, df, domain, path, db, table):
+        self.df = df
         self.domain = domain
-        self.directory = 'articles\\' + self.domain
-        self.corpus = 'corpus\\' + self.domain
+        self.db = db
+        self.table = table
+        self.path = path
+        self.directory = self.path + 'articles/' + self.domain
+        self.corpus = self.path + 'corpus/' + self.domain
 
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
@@ -64,11 +67,11 @@ class ArticleManager(object):
             self.log_errors('No archive for (exception): ' + str(url))
             pass
 
-    def filter_df_domain(self):
-
-        df = self.df[self.df['link'].map(lambda x: rx.check_domain(str(x).strip(), self.domain))]
-
-        return df
+    # def filter_df_domain(self):
+    #
+    #     df = self.df[self.df['real'].map(lambda x: rx.check_domain(str(x).strip(), self.domain))]
+    #
+    #     return df
 
     def filter_df_id(self, id):
         articles = fx.get_fnames(self.directory)
@@ -79,21 +82,21 @@ class ArticleManager(object):
 
         files = fx.get_fnames(self.directory)
 
-        df = self.filter_df_domain()
+        # df = self.filter_df_domain()
 
-        df['id'] = df['id'].map(lambda x: str(x).split('.')[0])
+        # df['id'] = df['id'].map(lambda x: str(x).split('.')[0])
 
         if len(files) > 0:
-            return df[~df['id'].isin(files)]
+            return self.df[~self.df['id'].isin(files)]
         else:
-            return df
+            return self.df
 
     def get_articles(self):
 
         df = self.get_missing_files()
 
         for ix, row in tqdm(df.iterrows()):
-            self.get_article(str(row['link']).strip(), str(row['id']))
+            self.get_article(str(row['real']).strip(), str(row['id']))
 
     # get offline urls from the Wayback Machine API
     def get_archives(self):
@@ -103,7 +106,7 @@ class ArticleManager(object):
         self.log_errors('----------starting archive log----------')
 
         for ix, row in tqdm(df.iterrows()):
-            self.get_archive(str(row['link']).strip(), str(row['id']))
+            self.get_archive(str(row['real']).strip(), str(row['id']))
 
     def set_broken_links(self):
 
@@ -113,7 +116,7 @@ class ArticleManager(object):
 
         df['offline'] = True
 
-        pdx.df_update_sql_field('brexit.db', 'links_unique', 'id', 'offline', df, 'BOOLEAN')
+        pdx.df_update_sql_field(self.db, self.table, 'id', 'offline', df, 'BOOLEAN')
 
     def get_broken_links(self):
 
@@ -122,14 +125,14 @@ class ArticleManager(object):
         df['offline'] = True
 
         for ix, row in tqdm(df.iterrows()):
-            row['link'], row['offline'] = gx.get_broken_link(row['link'], rx.find_domain(row['link']))
+            row['real'], row['offline'] = gx.get_broken_link(row['real'], rx.find_domain(row['real']))
 
         df = df[df['offline'] == False]
 
         if len(df) > 0:
             print('Updating %s records' % len(df))
-            pdx.df_update_sql_field('brexit.db', 'links_unique', 'id', 'offline', df, 'BOOLEAN')
-            pdx.df_update_sql_field('brexit.db', 'links_unique', 'id', 'link', df, 'BOOLEAN')
+            pdx.df_update_sql_field(self.db, self.table, 'id', 'offline', df, 'BOOLEAN')
+            pdx.df_update_sql_field(self.db, self.table, 'id', 'real', df, 'BOOLEAN')
 
     @fx.timer
     def get_corpus(self):
@@ -155,20 +158,15 @@ class ArticleManager(object):
         fx.save_pickle(os.path.join(self.corpus, self.domain + '.pkl'), df)
         pdx.save_to_csv(df, os.path.join(self.corpus, self.domain))
 
-
     @fx.timer
     def get_corpus_weight(self, column):
         """
         Get weighted corpus dataframe according to column weight
         (count, favorites, retweets, is_bot)
         """
+        df_corpus = fx.load_pickle(self.corpus +'/' + self.domain + '.pkl')
 
-        df_corpus = fx.load_pickle(os.path.join(self.corpus, self.domain + '.pkl'))
-        df_weight = fx.load_pickle(os.path.join(os.path.abspath(os.curdir) + '\\' + 'dataframes', 'top_links_final.pkl'))
-
-        df_weight = pdx.check_df(df_weight)
-
-        df_weight = df_weight.filter(['id', column], axis=1)
+        df_weight = self.df.filter(['id', column], axis=1)
 
         df_corpus['id'] = df_corpus['id'].astype(int)
         df_weight['id'] = df_weight['id'].astype(int)
@@ -209,7 +207,10 @@ class ArticleManager(object):
             files = kwargs['files_']
         else:
             files = os.listdir(self.directory)
-            files.remove('errors.log')
+
+            if 'errors' in files:
+                # remove log file
+                files.remove('errors')
 
         for fname in tqdm(files):
             self.clean_file(fname, field, remove)
@@ -221,19 +222,21 @@ class ArticleManager(object):
         """
         files = fx.get_fnames(self.directory)
 
-        # remove log file
-        files.remove('errors')
+        if 'errors' in files:
+            # remove log file
+            files.remove('errors')
 
         files_to_remove = []
 
         if 'clear_small' in kwargs:
             ids = [f for f in files if os.path.getsize(self.directory + '\\' + f + '.pkl') < 10000]
             files_to_remove.extend([self.directory + '\\' + f + '.pkl' for f in ids])
-            dbx.delete_rows('brexit.db', 'links_unique', 'id', ids)
+            dbx.delete_rows(self.db, self.table, 'id', ids)
 
             if len(files_to_remove) > 0:
                 fx.delete_files(files_to_remove)
 
+        # verify if links correspond to domain
         if 'save' in kwargs:
             data = []
             for id in tqdm(files):
@@ -241,7 +244,7 @@ class ArticleManager(object):
                 link = doc['canonical_link']
                 data.append((id, link))
 
-            df = pd.DataFrame(data, columns=['id', 'link'])
+            df = pd.DataFrame(data, columns=['id', 'real'])
             pdx.save_to_csv(df, os.path.join(self.corpus, self.domain))
 
     def replace_links(self):
@@ -251,8 +254,9 @@ class ArticleManager(object):
         """
         files = fx.get_fnames(self.directory)
 
-        # remove log file
-        files.remove('errors')
+        if 'errors' in files:
+            # remove log file
+            files.remove('errors')
 
         ids = []
 
@@ -265,13 +269,13 @@ class ArticleManager(object):
 
         data = list(zip(ids, links))
 
-        df = pd.DataFrame(data, columns=['id', 'link'])
+        df = pd.DataFrame(data, columns=['id', 'real'])
 
         print(df)
 
-        pdx.df_update_sql_field('brexit.db', 'links_unique', 'id', 'link', df, 'TEXT')
+        pdx.df_update_sql_field(self.db, self.table, 'id', 'real', df, 'TEXT')
 
-        df = df[~df['link'].isnull()]
+        df = df[~df['real'].isnull()]
 
         for ix, row in df.iterrows():
-            self.get_article(row['link'], row['id'])
+            self.get_article(row['real'], row['id'])

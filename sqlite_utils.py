@@ -4,14 +4,14 @@ import io
 import numpy as np
 import dask
 import dask.dataframe as dd
-
+import unicode
 
 # connect to a db
 def connect_db(db):
     conn = sqlite3.connect(db)
-    conn.text_factory = str
+    # conn.text_factory = str
     # conn.text_factory = bytes
-    # conn.text_factory = lambda x: unicode(x, 'utf-8', 'ignore')
+    conn.text_factory = lambda x: unicode(x, 'utf-8', 'ignore')
     return conn
 
 
@@ -109,6 +109,20 @@ def select_sql_pd_limit(db, table, fields, field, value, limit):
     return df
 
 
+def select_sql_df(db, table, fields, where, rows):
+    conn = connect_db(db)
+
+    if type(fields) == list:
+        fields = ", ".join(fields)
+
+    rows = tuple(rows)
+
+    query = "SELECT %s FROM %s WHERE %s IN %s;" % (fields, table, where, rows)
+
+    df = pd.read_sql_query(query, conn)
+    return df
+
+
 def query_sql_pd(db, table, fields, order, direction, limit):
     conn = connect_db(db)
 
@@ -139,6 +153,18 @@ def count_having_sql_df(db, table, fields, groupby, field, operator, value):
         fields = ", ".join(fields)
 
     query = "SELECT %s, count(*) FROM %s GROUP BY %s HAVING %s%s'%s';" % (fields, table, groupby, field, operator, value)
+
+    df = pd.read_sql_query(query, conn)
+    return df
+
+
+def groupby_sql_df(db, table, fields, group_by, order_by, order):
+    conn = connect_db(db)
+
+    if type(fields) == list:
+        fields = ", ".join(fields)
+
+    query = "SELECT %s FROM %s GROUP BY %s ORDER BY %s %s;" % (fields, table, group_by, order_by, order)
 
     df = pd.read_sql_query(query, conn)
     return df

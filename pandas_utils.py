@@ -16,7 +16,7 @@ def check_df(df):
     if isinstance(df, pd.DataFrame):
         return df
     else:
-        return df.compute(get=dask.local.get_sync)
+        return df.compute()
 
 
 # read DB table into a pandas dataframe
