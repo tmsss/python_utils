@@ -1,7 +1,7 @@
 import numpy as np
 import scipy as sp
-import io
 from scipy.cluster.hierarchy import linkage
+from tqdm import tqdm
 
 def find_common(arrays_):
     '''
@@ -30,6 +30,11 @@ def build_list(array_, list_):
     return [array_.append(ix) or ix for ix in list_]
 
 
+# remove one list of items from other
+def remove_list(all_items, list_):
+    return [item for item in all_items if item not in list_]
+
+
 # flatten json files
 def get_values(lVals):
     res = []
@@ -41,11 +46,17 @@ def get_values(lVals):
     return res
 
 
+# apply function to list
+def apply_fn(fn, list_):
+
+    for item in tqdm(list_):
+        fn(item)
+
 # iterate list in chunks
 # from https://stackoverflow.com/questions/434287/what-is-the-most-pythonic-way-to-iterate-over-a-list-in-chunks
 def chunker(seq, size):
     return (seq[pos:pos + size] for pos in range(0, len(seq), size))
-    
+
 
 # Jensen-Shannon Divergence from https://stackoverflow.com/questions/15880133/jensen-shannon-divergence#27432724
 # https://en.wikipedia.org/wiki/Jensen%E2%80%93Shannon_divergence

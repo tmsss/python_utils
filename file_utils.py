@@ -1,4 +1,5 @@
 import os
+import shutil
 import _pickle as pickle
 import json
 import time
@@ -62,6 +63,22 @@ def get_folders(directory):
     return os.listdir(directory)
 
 
+# delete all files in folder
+def clean_folder(folder):
+    files = os.listdir(os.path.abspath(os.curdir) + '\\' + folder)
+    files = [os.path.abspath(os.curdir) + '\\' + folder + '\\' + f for f in files]
+    delete_files(files)
+
+
+# create folder
+def create_folder(folder):
+    os.makedirs(os.path.dirname(folder + '/'), exist_ok=True)
+
+
+def delete_folder(folder):
+    shutil.rmtree(folder, ignore_errors=True)
+
+
 def get_fnames(directory):
     """
     Return filenames of specific folder without the extension
@@ -85,7 +102,7 @@ def load_pickle(fname):
 
 
 def save_pickle(fname, item):
-        
+
     output = open(fname, 'wb')
 
     # disable garbage collector (performance hack)
@@ -147,18 +164,6 @@ def delete_files(files):
         print('%s files deleted. \n' % len(files))
     else:
         print('Empty folder.')
-
-
-# delete all files in folder
-def clean_folder(folder):
-    files = os.listdir(os.path.abspath(os.curdir) + '\\' + folder)
-    files = [os.path.abspath(os.curdir) + '\\' + folder + '\\' + f for f in files]
-    delete_files(files)
-
-
-# create folder
-def create_folder(folder):
-    os.makedirs(os.path.dirname(folder + '/'), exist_ok=True)
 
 
 # function to flatten arrays from json files

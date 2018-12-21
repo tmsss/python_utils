@@ -27,7 +27,7 @@ os.environ['JAVAHOME'] = "C:\\Program Files\\Java\\jdk1.8.0_101\\bin\\java.exe"
 
 class build_model(object):
 
-    def __init__(self, media, label, model, vectorizer, df, topics, field, delete, **kwargs):
+    def __init__(self, media, label, path, model, vectorizer, df, topics, field, delete, lang, **kwargs):
         self.media = media
         self.label = label
         self.model = model
@@ -35,15 +35,16 @@ class build_model(object):
         self.df = pdx.check_df(df)
         self.topics = topics
         self.field = field
-        self.path = 'models/' + self.label + '/' + self.label
+        self.path = path + 'models/' + self.label + '/' + self.label
         self.delete = delete
+        self.lang = lang
         self.attributes = kwargs
 
-        if not os.path.exists('models/' + self.label):
-            os.makedirs('models/' + self.label)
+        if not os.path.exists(path + 'models/' + self.label):
+            os.makedirs(path + 'models/' + self.label)
 
         if self.delete:
-            fx.clean_folder('models/' + self.label)
+            fx.clean_folder(path + 'models/' + self.label)
 
     def load_data(self):
 
@@ -62,13 +63,9 @@ class build_model(object):
         if 'strip_urls' in self.attributes:
             text = rx.strip_urls(text)
 
-        stop_words = stopwords.words('english')
-
-        stop_words.extend(stopwords.words('french'))
-
-        stop_words.extend(stopwords.words('spanish'))
-
-        stop_words.extend(stopwords.words('german'))
+        # stopword language list: 'english', 'french', 'spanish', 'german', 'portuguese'
+        for lang in self.lang:
+            stop_words = stopwords.words(lang)
 
         stop_words.extend(['brexit', 'twitter', 'tweet', 'euref', 'eureferendum', 'correspondent',
                             'referendum', 'pic', 'eurefpic', 'eupic', 'com', 'bbc'

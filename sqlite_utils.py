@@ -2,16 +2,17 @@ import sqlite3
 import pandas as pd
 import io
 import numpy as np
-import dask
 import dask.dataframe as dd
-import unicode
+
 
 # connect to a db
 def connect_db(db):
     conn = sqlite3.connect(db)
-    # conn.text_factory = str
+    # conn.text_factory = convert_string
+    conn.text_factory = str
     # conn.text_factory = bytes
-    conn.text_factory = lambda x: unicode(x, 'utf-8', 'ignore')
+    # conn.text_factory = lambda x: unicode(x, 'utf-8', 'ignore')
+    # conn.text_factory = lambda x: x.decode('iso-8859-1')
     return conn
 
 
@@ -109,7 +110,7 @@ def select_sql_pd_limit(db, table, fields, field, value, limit):
     return df
 
 
-def select_sql_df(db, table, fields, where, rows):
+def select_sql_df(db, table, fields, where, rows, encode=True):
     conn = connect_db(db)
 
     if type(fields) == list:
