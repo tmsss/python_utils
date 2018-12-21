@@ -20,8 +20,11 @@ def fetch_url(url, **kwargs):
     response = fetch(url, **kwargs)
 
     if response:
-        url = response.url if response.url else url
-        return url
+        if response.status_code == 403:
+            return response.history[1].url
 
+        elif response.status_code == 200:
+            url = response.url if response.url else url
+            return url
     else:
         pass
