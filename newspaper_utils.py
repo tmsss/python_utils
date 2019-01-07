@@ -37,12 +37,15 @@ class ArticleManager(object):
         logf = open(self.directory + '/errors.log', 'a')
         logf.write(error + '\n')
 
-    def get_article(self, url, id):
+    def get_article(self, url, id, scrape=False):
             try:
-                a = Article(str(url))
-                a.download()
-                a.parse()
-                doc = {attr: value for attr, value in a.__dict__.items() if not attr.startswith('__') and type(value) in [str, list, set, bool, int, dict, 'collections.defaultdict']}
+                if scrape:
+                    a = Article(str(url))
+                    a.download()
+                    a.parse()
+                    doc = {attr: value for attr, value in a.__dict__.items() if not attr.startswith('__') and type(value) in [str, list, set, bool, int, dict, 'collections.defaultdict']}
+                else:
+                        
                 fx.save_pickle(self.directory + '/' + str(id) + '.pkl', doc)
 
             except newspaper.article.ArticleException as e:
