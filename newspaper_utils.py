@@ -4,12 +4,14 @@ import os
 import json
 import pandas as pd
 import numpy as np
+from bs4 import BeautifulSoup
 from python_utils import file_utils as fx
 from python_utils import regex_utils as rx
 from python_utils import pandas_utils as pdx
 from python_utils import requests_utils as rqx
 from python_utils import google_utils as gx
 from python_utils import sqlite_utils as dbx
+from python_utils import scraping_utils as scx
 from tqdm import tqdm
 
 
@@ -37,15 +39,41 @@ class ArticleManager(object):
         logf = open(self.directory + '/errors.log', 'a')
         logf.write(error + '\n')
 
-    def get_article(self, url, id, scrape=False):
+    def get_articles(self, scrape=False):
+
+        df = self.get_missing_files()
+
+        if not scrape:
+            for ix, row in tqdm(df.iterrows()):
+                self.get_article(str(row['real']).strip(), str(row['id']))
+        else:
+            driver = scx.get_driver()
+            for ix, row in tqdm(df.iterrows()):
+                self.get_article_scrapper(driver, str(row['real']).strip(), str(row['id']))
+            driver.quit()
+
+    def get_article_scrapper(self, driver, url, id):
+        soup = scx.get_driver_soup(driver, url)
+        text = soup.find("article")
+
+        if text:
+            doc = {
+                'title': soup.find("h1").get_text(),
+                'text': text.get_text(),
+                'canonical_link': soup.find("link")['href']
+            }
+
+            fx.save_pickle(self.directory + '/' + str(id) + '.pkl', doc)
+        else:
+            self.log_errors('Page without article: ' + str(url))
+            pass
+
+    def get_article(self, url, id):
             try:
-                if scrape:
-                    a = Article(str(url))
-                    a.download()
-                    a.parse()
-                    doc = {attr: value for attr, value in a.__dict__.items() if not attr.startswith('__') and type(value) in [str, list, set, bool, int, dict, 'collections.defaultdict']}
-                else:
-                        
+                a = Article(str(url))
+                a.download()
+                a.parse()
+                doc = {attr: value for attr, value in a.__dict__.items() if not attr.startswith('__') and type(value) in [str, list, set, bool, int, dict, 'collections.defaultdict']}
                 fx.save_pickle(self.directory + '/' + str(id) + '.pkl', doc)
 
             except newspaper.article.ArticleException as e:
@@ -93,13 +121,6 @@ class ArticleManager(object):
             return self.df[~self.df['id'].isin(files)]
         else:
             return self.df
-
-    def get_articles(self):
-
-        df = self.get_missing_files()
-
-        for ix, row in tqdm(df.iterrows()):
-            self.get_article(str(row['real']).strip(), str(row['id']))
 
     # get offline urls from the Wayback Machine API
     def get_archives(self):

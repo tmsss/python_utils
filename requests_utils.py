@@ -1,5 +1,5 @@
 import requests
-
+from bs4 import BeautifulSoup
 
 def fetch(url, **kwargs):
     try:
