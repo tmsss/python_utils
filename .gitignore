@@ -7,5 +7,6 @@ stanford-ner-2018-02-27/
 # remove api credentials
 apis.py
 
-# remove scrapping drivers
+# remove scrapping drivers and logs
 geckodriver.exe
+geckodriver.log
