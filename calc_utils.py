@@ -46,11 +46,11 @@ def get_values(lVals):
     return res
 
 
-# apply function to list
-def apply_fn(fn, list_):
+# apply function to list of arguments
+def apply_fn(fn, args):
+    for item in tqdm(args):
+        fn(*item)
 
-    for item in tqdm(list_):
-        fn(item)
 
 # iterate list in chunks
 # from https://stackoverflow.com/questions/434287/what-is-the-most-pythonic-way-to-iterate-over-a-list-in-chunks
