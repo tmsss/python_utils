@@ -345,7 +345,8 @@ def get_tweets_by_month(start, end, num, db, table, fields, date_field):
 
 # get a euclidean distance matrix from a pandas field
 def get_ecd_mx(df, labels, field):
-        mx = df[[labels, field]]
+        # reset index to force index row numbers start from 0
+        mx = df[[labels, field]].reset_index(drop=True)
 
         # build tuples with all possible combinations of indexes
         combinations = [p for p in itertools.product(
@@ -353,8 +354,9 @@ def get_ecd_mx(df, labels, field):
 
         arr_ = []
         for ix, jx in combinations:
-            arr_.append(cx.get_ecd(mx[field][ix], mx[field][jx]))
+            arr_.append(cx.get_ecd(mx.loc[ix, field], mx.loc[jx, field]))
 
         arr_ = np.array_split(arr_, len(mx[field].values))
         nx = pd.DataFrame(arr_, columns=df[labels], index=df[labels])
+
         return nx
