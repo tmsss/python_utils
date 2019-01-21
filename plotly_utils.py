@@ -410,7 +410,7 @@ def draw_lines_chart(columns, title, format='pdf', **kwargs):
     layout = go.Layout(
         autosize=False,
         width=2000,
-        height=1000,
+        height=1200,
         title=title,
         legend=dict(orientation="h", font=dict(size=18)),
         xaxis=dict(ticks='', tickfont=dict(size=18)),
@@ -456,9 +456,9 @@ def draw_dendogram(data, title, labels, format):
 
 
     # margin configuration
-    figure['layout']['margin'].update({'b': 40, 'l': 200, 'r': 15, 't': 40, 'pad': 5})
+    figure['layout']['margin'].update({'b': 40, 'l': 300, 'r': 15, 't': 40, 'pad': 5})
 
-    figure['layout'].update({'autosize': False, 'width': 1000, 'height': 1500})
+    figure['layout'].update({'autosize': False, 'width': 1200, 'height': 1500})
 
     fname = title + '_dendogram'
 

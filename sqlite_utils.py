@@ -209,7 +209,11 @@ def adapt_array(arr):
 
 
 def convert_array(text):
-    out = io.BytesIO(text)
-    out.seek(0)
-    out = io.BytesIO(out.read())
-    return np.load(out)
+    if type(text) == bytes:
+        out = io.BytesIO(text)
+        out.seek(0)
+        out = io.BytesIO(out.read())
+        return np.load(out)
+    else:
+        print('TypeError: Argument must be an object but found a {} instead. Returning the original value.'.format(type(text).__name__))
+        return text
