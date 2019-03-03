@@ -307,10 +307,13 @@ def groupby_sum(df, fields):
 # from https://stackoverflow.com/questions/32468402/how-to-explode-a-list-inside-a-dataframe-cell-into-separate-rows
 @fx.timer
 def lateral_explode(df, fieldname):
+    df = check_df(df)
     temp_fieldname = fieldname + '_made_tuple_'
     df[temp_fieldname] = df[fieldname].map(tuple)
     list_of_dataframes = []
-    for values in df[temp_fieldname].unique().tolist():
+    temp_list = df[temp_fieldname].unique()
+    
+    for values in temp_list:
         list_of_dataframes.append(pd.DataFrame({
             temp_fieldname: [values] * len(values),
             fieldname: list(values),
