@@ -45,6 +45,15 @@ def get_values(lVals):
             res.extend(get_values(val))
     return res
 
+# convert list string literal to list
+def str_list(lst):
+    try:
+        lst = lst.replace('][', ',')
+        return np.array(ast.literal_eval(lst))
+    except Exception:
+        print(lst)
+        pass
+
 
 # apply function to list of arguments
 def apply_fn(fn, args):
