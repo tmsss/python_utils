@@ -5,10 +5,11 @@ import dask.dataframe as dd
 import io
 import json
 import itertools
-from python_utils import sqlite_utils as dbx
-from python_utils import file_utils as fx
-from python_utils import date_utils as dx
-from python_utils import calc_utils as cx
+
+import sqlite_utils as dbx
+import file_utils as fx
+import date_utils as dx
+import calc_utils as cx
 
 
 # check if it is a pandas or dask dataframe
@@ -102,12 +103,29 @@ def get_field_value(db, table, field1, field2, value):
 
 
 @fx.timer
-def db_ddf(db, table, columns, partitions, chunksize, offset):
+def db_ddf(db, table, columns, partitions, chunksize, offset=0):
+    '''
+    Load big sql table into dask dataframe in chunks to prevent memory exhaustion
+
+    args
+    ----
+    db (str): database to connect
+    table (str): database table
+    columns (list): list of table columns to retrieve
+    partitions (int): Number of dask partitions to use
+    chunksize (int): Number of rows to return in each iteration of the sql query (affects memory allocated)
+    offset (int): Offset rows in query (needed for sql query iteration, default=0)
+
+    returns
+    ----
+    final (object): dask dataframe
+    '''
+    
     conn = dbx.connect_db(db)
     df = pd.DataFrame()
 
     while True:
-        query = "SELECT * FROM %s limit %s offset %s;" % (table, chunksize, offset)
+        query = "SELECT * FROM {} limit {} offset {};".format(table, chunksize, offset)
         df = pd.read_sql_query(query, conn)
         ddt = dd.from_pandas(df[columns], npartitions=partitions)
         if offset == 0:
@@ -357,9 +375,28 @@ def get_ecd_mx(df, labels, field):
 
         arr_ = []
         for ix, jx in combinations:
-            arr_.append(cx.get_ecd(mx.loc[ix, field], mx.loc[jx, field]))
+            arr_.append(cx.get_ecd(mx.loc[ix, field], mx.loc[jx, field], square=False))
 
         arr_ = np.array_split(arr_, len(mx[field].values))
         nx = pd.DataFrame(arr_, columns=df[labels], index=df[labels])
 
         return nx
+
+
+def set_df_int(df, exclude):
+    '''
+    Returns a pandas dataframe converted to integer.
+
+    Parameters:
+        exclude(array):The array of columns to exclude from conversion (text e.g.).
+
+    Returns:
+        df(dataframe):The pandas dataframe converted to integer.
+    '''
+
+    columns = [i for i in df.columns if i not in exclude]
+
+    for col in columns:
+        df[col] = pd.to_numeric(df[col])
+    
+    return df

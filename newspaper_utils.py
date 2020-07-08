@@ -5,13 +5,13 @@ import json
 import pandas as pd
 import numpy as np
 from bs4 import BeautifulSoup
-from python_utils import file_utils as fx
-from python_utils import regex_utils as rx
-from python_utils import pandas_utils as pdx
-from python_utils import requests_utils as rqx
-from python_utils import google_utils as gx
-from python_utils import sqlite_utils as dbx
-from python_utils import scraping_utils as scx
+import file_utils as fx
+import regex_utils as rx
+import pandas_utils as pdx
+import requests_utils as rqx
+import google_utils as gx
+import sqlite_utils as dbx
+import scraping_utils as scx
 from tqdm import tqdm
 
 

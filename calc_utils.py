@@ -1,8 +1,16 @@
 import numpy as np
 import scipy as sp
 from scipy.cluster.hierarchy import linkage
+from scipy.spatial import distance
+from scipy.stats import entropy
 import ast
 from tqdm import tqdm
+import multiprocessing as mp
+import time
+import itertools
+import powerlaw
+import matplotlib.pyplot as plt
+
 
 def find_common(arrays_):
     '''
@@ -65,24 +73,131 @@ def apply_fn(fn, args):
 # iterate list in chunks
 # from https://stackoverflow.com/questions/434287/what-is-the-most-pythonic-way-to-iterate-over-a-list-in-chunks
 def chunker(seq, size):
-    return (seq[pos:pos + size] for pos in range(0, len(seq), size))
+    return [seq[pos:pos + size] for pos in range(0, len(seq), size)]
 
 
-# Jensen-Shannon Divergence from https://stackoverflow.com/questions/15880133/jensen-shannon-divergence#27432724
-# https://en.wikipedia.org/wiki/Jensen%E2%80%93Shannon_divergence
-def get_jsd(p, q, base=2):
-    # https://gist.github.com/zhiyzuo/f80e2b1cfb493a5711330d271a228a3d
+def get_square_matrix(p, q):
+    """Return arrays with the size of the smaller array between p and q.
 
-    ## convert to np.array
-    p, q = np.asarray(p), np.asarray(q)
+    Input
+    -----
+    p, q : arrays
 
-    ## normalize p, q to probabilities
-    p, q = p/p.sum(), q/q.sum()
-    m = 1./2*(p + q)
+    Returns
+    -----
+    p, q : arrays with the size of the smaller array between p and q.
+    """
+    
+    minimun = min([len(p), len(q)])
 
-    jsd = sp.stats.entropy(p,m, base=base)/2. + sp.stats.entropy(q, m, base=base)/2.
+    return p[:minimun], q[:minimun]
 
-    return jsd
+
+def get_jsd(p, q, dist=False):
+    """
+    Compute the Jensen-Shannon divergence between two probability distributions.
+    Jensen-Shannon Divergence from https://stackoverflow.com/questions/15880133/jensen-shannon-divergence#27432724
+    https://en.wikipedia.org/wiki/Jensen%E2%80%93Shannon_divergence
+
+    Input
+    -----
+    P, Q : array-like probability distributions of equal length that sum to 1
+
+    distance: the square root of the divergence
+    """
+    # make sure if the arrays are of equal size
+    p, q = get_square_matrix(p, q)
+
+    # convert to np.array and flatten
+    p, q = np.asarray(p).flatten(), np.asarray(q).flatten()
+
+    jsd = distance.jensenshannon(p, q)
+
+    if dist:
+        return jsd
+    else:
+        return jsd ** 2
+
+
+def rle(series):
+    """ 
+    Run length encoding for sparse time series to encode zeros as in needed for awarp calculation 
+    (https://ieeexplore.ieee.org/document/7837859 | https://github.com/mclmza/AWarp)
+    
+    args
+    ----
+    series: sparse times series (e.g. x = [0, 0, 0, 2, 3, 0, 5, 6, 0, 0, 4, 0, 0])
+
+    returns
+    ---- 
+    array with encoded zeros (e.g. [3 2 3 1 5 6 2 4 2]) """
+
+    # convert to np array
+    series = np.array(series)
+
+    # add points to detect inflection on start and end
+    series_ = np.concatenate(([1], series, [1]))
+
+    # find zeros and non zeros
+    zeros = np.where(series_ == 0)[0]
+
+    if len(zeros) > 0:
+        nonzeros = np.where(series_ != 0)[0]
+
+        # detect zero sequencies
+        split_zeros = np.where(np.diff(zeros) > 1)[0] + 1
+
+        splitted_zeros = np.split(zeros, split_zeros)
+
+        zero_points = []
+        zero_points = np.array(zero_points, dtype=int)
+        
+        for z in splitted_zeros:
+            zero_points = np.append(zero_points, z[-1])
+
+        # detect non-zero sequencies
+        nonzero_points = nonzeros[np.where(np.diff(nonzeros) > 1)[0]]
+
+        # concat all splitting points
+        split = np.sort(np.concatenate([zero_points, nonzero_points]))
+
+        # avoid splitting on first element
+        split = split[split > 0]
+
+        # separate zero sequencies from non-zero sequencies
+        splitted_series = np.split(series, split)
+
+        # initialize empty array
+        rle = []
+        rle = np.array(rle, dtype=int)
+
+        # encode zeros
+        for s in splitted_series:
+            # if it is a zero sequence enconde the lenght of the sequence
+            if np.sum(s) == 0:
+                rle = np.append(rle, [len(s)], axis=0)
+            else:
+                rle = np.concatenate([rle, s])
+
+        # remove zeros in the end
+        rle = rle[rle > 0]
+
+        return rle
+    else:
+        return series
+
+# x = [1, 2, 2, 3, 0, 0, 0, 5, 0, 6, 4]
+# print(rle(x))
+
+
+# calculate euclidean distance
+def get_ecd(p, q, square=True):
+
+    # make sure if the arrays are of equal size
+    if square:
+        p, q = get_square_matrix(p, q)
+
+    return np.linalg.norm(p - q)
 
 
 # calculate cosine similarity
@@ -90,10 +205,95 @@ def get_cosim(corpus_01, corpus_02):
     return np.dot(corpus_01, corpus_02)/(np.linalg.norm(corpus_01)*np.linalg.norm(corpus_02))
 
 
-# calculate euclidean distance
-def get_ecd(corpus_01, corpus_02):
-    return np.linalg.norm(corpus_01 - corpus_02)
+def itertools_flatten(arr_):
+    return list(itertools.chain.from_iterable(arr_))
 
+
+def get_flatten(arr_, size):
+    """Parallel function to flatten a N dimensional array/matrix in chunks.
+
+    Input
+    -----
+    arr_ : N Dimensional array
+
+    size: int to define the number of array items in each chunk 
+
+    Returns
+    -----
+    flatten_ : 1D array
+    """
+
+    chunks = []
+
+    for chunk in chunker(arr_, size):
+        # with mp.get_context("spawn").Pool(processes=int(mp.cpu_count())) as pool:
+        #     chunk_data = pool.starmap(itertools_flatten, chunk)
+        #     pool.close()
+        #     pool.join()
+        chunks.append(itertools_flatten(chunk))
+
+    # print(chunks)
+    flatten_ = itertools_flatten(chunks)
+    # print(len(flatten_))
+
+    return flatten_
+
+
+def get_entropy(corpus):
+    """
+    Computes entropy for a given array
+
+    Parameters
+    ----------
+    corpus : 1D array
+
+    Returns
+    -------
+    entropy: float
+        the computed entropy
+    """
+
+    # make sure that we dealing with an 1D array
+    # corpus = np.asarray(corpus).flatten()
+    # ray.init()
+
+    len_corpus = corpus.shape[0] * corpus.shape[1]
+
+    flatten_corpus = get_flatten(corpus, 50)
+
+    assert len_corpus == len(flatten_corpus), "The length of the flattened array ({}) doesn't correspond to expected ({})".format(len(flatten_corpus), len_corpus)
+
+    t = time.process_time()
+
+    result = entropy(flatten_corpus)
+
+    # ray.shutdown()
+
+    print('Elapsed time: {}'.format(time.process_time() - t))
+    print('Entropy calculation finished')
+    return result
+
+
+def get_powerlaw(distribution:list):
+
+    # powerlaw.plot_pdf(data, color='r', ax=figPDF)
+    # fit.plot_pdf(label="Fitted PDF")
+    # figPDF.set_ylabel(r"$p(X)$")
+    # figPDF.set_xlabel(r"Word Frequency")
+    fit = powerlaw.Fit(distribution, discrete=True)
+    print('alpha: {}'.format(fit.power_law.alpha))
+    print('min: {}'.format(fit.power_law.xmin))
+    # powerlaw.plot_pdf(data[data>=fit.power_law.xmin], label="Data as PDF")
+        
+    R, p = fit.distribution_compare('truncated_power_law', 'power_law', normalized_ratio=True)
+    print(R, p)
+    print('power law  parameter (alpha): {}'.format(fit.truncated_power_law.parameter1))
+    print('exponential cut-off parameter (beta): {}'.format(fit.truncated_power_law.parameter2))
+
+    # figPDF = powerlaw.plot_pdf(distribution, color='b')
+    # powerlaw.plot_pdf(distribution, color='r', ax=figPDF)
+    # fit.power_law.plot_pdf(label="Fitted PDF", ls=":")
+    # plt.legend(loc=3, fontsize=14)
 
 # linkage function to create dendograms
 '''

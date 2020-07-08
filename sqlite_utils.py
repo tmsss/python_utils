@@ -22,7 +22,14 @@ def get_db_tables(db):
     return tables
 
 
+def query_db(db, query):
+    conn = connect_db(db)
+    df = pd.read_sql_query(query, conn)
+    return df
+
+
 def update_field(db, table, where, field, type, data):
+    # update database column based in list of tuples
     conn = connect_db(db)
     c = conn.cursor()
     c.execute('''PRAGMA locking_mode = EXCLUSIVE''')
@@ -213,7 +220,7 @@ def convert_array(text):
         out = io.BytesIO(text)
         out.seek(0)
         out = io.BytesIO(out.read())
-        return np.load(out)
+        return np.load(out, allow_pickle=True)
     else:
-        print('TypeError: Argument must be an object but found a {} instead. Returning the original value.'.format(type(text).__name__))
+        # print('TypeError: Argument must be an object but found a {} instead. Returning the original value.'.format(type(text).__name__))
         return text

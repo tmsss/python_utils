@@ -7,7 +7,7 @@ import plotly.figure_factory as ff
 from plotly import tools
 import cufflinks as cf
 cf.go_offline()
-from python_utils import calc_utils as cx
+import calc_utils as cx
 # import numpy as np
 # import networkx as nx
 # import community

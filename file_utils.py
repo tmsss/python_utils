@@ -6,7 +6,7 @@ import time
 import gc
 from functools import wraps
 from inspect import isfunction
-from python_utils import calc_utils as cx
+import calc_utils as cx
 
 
 def timer(f):
@@ -65,8 +65,8 @@ def get_folders(directory):
 
 # delete all files in folder
 def clean_folder(folder):
-    files = os.listdir(os.path.abspath(os.curdir) + '\\' + folder)
-    files = [os.path.abspath(os.curdir) + '\\' + folder + '\\' + f for f in files]
+    files = os.listdir(os.path.abspath(os.curdir) + '/' + folder)
+    files = [os.path.abspath(os.curdir) + '/' + folder + '/' + f for f in files]
     delete_files(files)
 
 

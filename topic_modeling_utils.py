@@ -3,23 +3,31 @@ import numpy as np
 import re
 import os
 import pandas as pd
+from scipy.stats import entropy
 from nltk.stem import PorterStemmer
 from nltk.stem import WordNetLemmatizer
 from nltk.tag import pos_tag, stanford
 from sklearn.decomposition import LatentDirichletAllocation, TruncatedSVD
 from sklearn.manifold import TSNE
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.model_selection import GridSearchCV
 from sklearn.cluster import KMeans
-from sklearn.externals import joblib
+import joblib
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud
 import bokeh.plotting as bp
 from bokeh.plotting import save
 from bokeh.models import HoverTool
-from python_utils import pandas_utils as pdx
-from python_utils import file_utils as fx
-from python_utils import regex_utils as rx
+
+import pandas_utils as pdx
+import file_utils as fx
+import regex_utils as rx
+
+# import sklearn
+
+# print(sklearn.__version__)
+# print(pd.__version__)
 
 # configure java home variable for NERTagger
 os.environ['JAVAHOME'] = "C:\\Program Files\\Java\\jdk1.8.0_101\\bin\\java.exe"
@@ -249,7 +257,8 @@ class build_model(object):
 
     def get_topic_weights(self):
         """
-        get measure to calculate distance between corpus https://stats.stackexchange.com/questions/102932/comparing-topic-distributions-between-corpora-using-latent-dirichlet-allocation/102981#102981?newreg=785582e9497e44b6b317bc3f098cfb3d
+        get measure to calculate distance between corpus 
+        https://stats.stackexchange.com/questions/102932/comparing-topic-distributions-between-corpora-using-latent-dirichlet-allocation/102981#102981?newreg=785582e9497e44b6b317bc3f098cfb3d
         """
         docs, model, vectors, fit, vectorizer = self.check_model()
         topic_vectors = []
@@ -258,6 +267,12 @@ class build_model(object):
             topic_vectors.append(topic.argsort()[:-10 - 1:-1])
 
         return np.array(topic_vectors)
+
+    def get_model(self):
+
+        docs, model, vectors, fit, vectorizer = self.check_model()
+
+        return fit
 
     # performing similarity queries
     def most_similar(self, x, Z, top_n=5):
@@ -489,3 +504,9 @@ class build_model(object):
         # mx.sum(axis=1).order(ascending=False).head(10)
         #
         print(df)
+
+
+def get_entropy(corpus):
+    vectorizer = TfidfVectorizer()
+    X = vectorizer.fit_transform(corpus)
+    print(entropy(X.toarray().flatten()))
