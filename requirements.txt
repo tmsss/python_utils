@@ -28,7 +28,7 @@ newspaper3k == 0.2.7
 
 # sentiment_utils.py: 12,13
 # topic_modeling_utils.py: 8
-nltk == 3.3
+nltk == 3.4.5
 
 # calc_utils.py: 1
 # embedding_utils.py: 1
