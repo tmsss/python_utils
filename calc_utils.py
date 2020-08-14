@@ -1,4 +1,5 @@
 import numpy as np
+import numba as nb
 import scipy as sp
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial import distance
@@ -6,6 +7,7 @@ from scipy.stats import entropy
 import ast
 from tqdm import tqdm
 import multiprocessing as mp
+from pathos.multiprocessing import ProcessingPool as Pool
 import time
 import itertools
 import powerlaw
@@ -315,5 +317,48 @@ method=’ward’ uses the Ward variance minimization algorithm. The new entry i
 is the newly joined cluster consisting of clusters and , is an unused cluster in the forest, and is the cardinality of its argument. This is also known as the incremental algorithm.
 '''
 
+
 def get_linkage(data, method, metric):
     return linkage(data, method=method, metric=metric)
+
+
+def cust_dist_matrix(X, metric):
+
+    # a_pool = Pool(int(mp.cpu_count()))
+
+    def create_matrix(X, metric):
+        matrix = np.zeros((X.shape[0], X.shape[0]))
+
+        for i in tqdm(range(X.shape[0])):
+            x = X[i, :]
+            for j in range(X.shape[0]):
+                y = X[j, :]
+                matrix[i, j] = metric(x, y)
+
+        return matrix
+                
+    # res = a_pool.apipe(create_matrix, X, metric)
+
+    # m = create_matrix(X, metric)
+
+    m = distance.cdist(X, X, metric=metric)
+
+    return m
+
+
+def turning_points(arr_):
+    """
+    Computes the turning point for a given array
+    from https://stackoverflow.com/questions/19936033/finding-turning-points-of-an-array-in-python
+
+    Parameters
+    ----------
+    arr_ : 1D array
+
+    Returns
+    -------
+    turning point: 1D array or int? check later
+    """
+    dx = np.diff(arr_)
+    return np.sum(dx[1:] * dx[:-1] < 0)
+    

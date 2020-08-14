@@ -11,6 +11,73 @@ T = 'top'
 D = 'diagonal'
 INF = int(1e10)
 
+def rle(series):
+    """ 
+    Run length encoding for sparse time series to encode zeros as in needed for awarp calculation 
+    (https://ieeexplore.ieee.org/document/7837859 | https://github.com/mclmza/AWarp)
+    
+    args
+    ----
+    series: sparse times series (e.g. x = [0, 0, 0, 2, 3, 0, 5, 6, 0, 0, 4, 0, 0])
+
+    returns
+    ---- 
+    array with encoded zeros (e.g. [3 2 3 1 5 6 2 4 2]) """
+
+    # convert to np array
+    series = np.array(series)
+
+    # add points to detect inflection on start and end
+    series_ = np.concatenate(([1], series, [1]))
+
+    # find zeros and non zeros
+    zeros = np.where(series_ == 0)[0]
+
+    if len(zeros) > 0:
+        nonzeros = np.where(series_ != 0)[0]
+
+        # detect zero sequencies
+        split_zeros = np.where(np.diff(zeros) > 1)[0] + 1
+
+        splitted_zeros = np.split(zeros, split_zeros)
+
+        zero_points = []
+        zero_points = np.array(zero_points, dtype=int)
+        
+        for z in splitted_zeros:
+            zero_points = np.append(zero_points, z[-1])
+
+        # detect non-zero sequencies
+        nonzero_points = nonzeros[np.where(np.diff(nonzeros) > 1)[0]]
+
+        # concat all splitting points
+        split = np.sort(np.concatenate([zero_points, nonzero_points]))
+
+        # avoid splitting on first element
+        split = split[split > 0]
+
+        # separate zero sequencies from non-zero sequencies
+        splitted_series = np.split(series, split)
+
+        # initialize empty array
+        rle = []
+        rle = np.array(rle, dtype=int)
+
+        # encode zeros
+        for s in splitted_series:
+            # if it is a zero sequence enconde the lenght of the sequence
+            if np.sum(s) == 0:
+                rle = np.append(rle, [len(s)], axis=0)
+            else:
+                rle = np.concatenate([rle, s])
+
+        # remove zeros in the end
+        rle = rle[rle > 0]
+
+        return rle
+    else:
+        return series
+
 
 @jit(nopython=True)
 def ub_costs(a, b, case):
@@ -90,6 +157,11 @@ def compute_awarp_constrained(d, x, y, w, t_x, t_y):
 
 
 def awarp(x, y, w=0):
+
+    # run length enconde series
+    x = rle(x)
+    y = rle(y)
+
     d = np.zeros((x.shape[0] + 1, y.shape[0] + 1)).astype(int)
     d[:, 0] = int(INF)
     d[0, :] = int(INF)

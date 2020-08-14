@@ -8,6 +8,7 @@ from plotly import tools
 import cufflinks as cf
 cf.go_offline()
 import calc_utils as cx
+import re
 # import numpy as np
 # import networkx as nx
 # import community
@@ -111,6 +112,45 @@ def draw_chart(title, data, **kwargs):
     if 'format' in kwargs:
         figure = Figure(data=data, layout=kwargs['layout'])
         pio.write_image(figure, title + '.' + kwargs['format'])
+
+    if 'clickable' in kwargs:
+        plot_div = offline.plot(data_dict, output_type='div', include_plotlyjs=True)
+
+        # Get id of html div element that looks like
+        # <div id="301d22ab-bfba-4621-8f5d-dc4fd855bb33" ... >
+        res = re.search('<div id="([^"]*)"', plot_div)
+        div_id = res.groups()[0]
+
+        # Build JavaScript callback for handling clicks
+        # and opening the URL in the trace's customdata 
+        js_callback = """
+        <script>
+        var plot_element = document.getElementById("{div_id}");
+        plot_element.on('plotly_click', function(data){{
+            console.log(data.points[0]);
+            var point = data.points[0];
+            if (point) {{
+                console.log(point.customdata);
+                window.open(point.text);
+            }}
+        }})
+        </script>
+        """.format(div_id=div_id)
+
+        # Build HTML string
+        html_str = """
+        <html>
+        <body>
+        {plot_div}
+        {js_callback}
+        </body>
+        </html>
+        """.format(plot_div=plot_div, js_callback=js_callback)
+
+        # Write out HTML file
+        with open('{}.html'.format(title), 'w') as f:
+            f.write(html_str)
+        
 
 def pandas_bar_chart(x_col, y_col, title):
 
@@ -248,7 +288,7 @@ def stacked_bar_chart(columns, title):
 
     draw_chart(title, data, layout=layout, image='svg')
 
-def scatter_chart(title, x, y1, y2, line):
+def scatter_chart_line(title, x, y1, y2, line):
 
     trace0 = go.Scatter(
         x = x,
@@ -284,6 +324,35 @@ def scatter_chart(title, x, y1, y2, line):
     )
 
     draw_chart(title, data, layout=layout, image='png')
+
+
+def scatter_chart(title, x, y, labels, text, colorscale='viridis', format='pdf'):
+
+    data = go.Scatter(
+        x=x,
+        y=y,
+        mode='markers',
+        name='markers',
+        marker=dict(
+            size=8,
+            color=labels,
+            colorscale=colorscale
+        ),
+        text=text
+    )
+
+    layout = go.Layout(
+        # autosize=False,
+        # width=2500,
+        # height=2000,
+        title=title,
+        xaxis=dict(ticks=''),
+        yaxis=dict(ticks='', tickfont=dict(size=12)),
+        margin=dict(b=40, l=120, r=5, t=40, pad=5)
+    )
+
+    draw_chart(title, data, layout=layout, clickable=True)
+
 
 def network_chart(df, title, layout='spring'):
 
