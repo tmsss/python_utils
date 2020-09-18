@@ -78,3 +78,12 @@ def strip_urls(text):
             pass
     except ValueError:
         pass
+
+
+def get_link_title(link):
+    if link:
+        try:
+            title = re.findall('<a.*?>(.*)</a>', link)[0]
+            return title
+        except IndexError:
+            pass

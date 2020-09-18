@@ -130,7 +130,7 @@ def draw_chart(title, data, **kwargs):
             console.log(data.points[0]);
             var point = data.points[0];
             if (point) {{
-                console.log(point.customdata);
+                console.log(point.text);
                 window.open(point.text);
             }}
         }})

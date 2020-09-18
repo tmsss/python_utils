@@ -117,7 +117,7 @@ def select_sql_pd_limit(db, table, fields, field, value, limit):
     return df
 
 
-def select_sql_df(db, table, fields, where, rows, encode=True):
+def select_sql_df(db, table, fields, where, rows):
     conn = connect_db(db)
 
     if type(fields) == list:
@@ -126,6 +126,19 @@ def select_sql_df(db, table, fields, where, rows, encode=True):
     rows = tuple(rows)
 
     query = "SELECT %s FROM %s WHERE %s IN %s;" % (fields, table, where, rows)
+
+    df = pd.read_sql_query(query, conn)
+
+    return df
+
+
+def select_fields_sql_df(db, table, fields):
+    conn = connect_db(db)
+
+    if type(fields) == list:
+        fields = ", ".join(fields)
+
+    query = "SELECT %s FROM %s;" % (fields, table)
 
     df = pd.read_sql_query(query, conn)
     return df

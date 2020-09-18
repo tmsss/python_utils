@@ -69,9 +69,9 @@ def select_sql_pd(db, table, fields, field, value):
     if type(fields) == list:
         fields = ", ".join(fields)
 
-    value = "'%" + value + "%'"
+    value = "'%" + str(value) + "%'"
 
-    query = "SELECT %s FROM %s WHERE %s LIKE %s;" % (fields, table, field, value)
+    query = "SELECT %s FROM %s WHERE %s LIKE %s;" % (fields, table, field, str(value))
 
     try:
         df = pd.read_sql_query(query, conn)

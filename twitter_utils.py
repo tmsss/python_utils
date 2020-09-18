@@ -3,9 +3,9 @@ from tweepy import API
 from tweepy import OAuthHandler
 from tweepy import TweepError
 from tweepy import parsers
-from python_utils import file_utils as fx
-from python_utils import date_utils as dx
-from python_utils import apis
+import file_utils as fx
+import date_utils as dx
+import apis
 
 
 class TwitterManager(object):
@@ -138,8 +138,10 @@ class TwitterManager(object):
             return userobj
         except TweepError as e:
             print(e)
+            # 63: user suspended
+            # 50: user not found
             if e.api_code == 63 or e.api_code == 50:
-                return True
+                return e
 
     def get_user_timeline(self, username):
         try:

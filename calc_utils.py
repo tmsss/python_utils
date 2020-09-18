@@ -3,7 +3,7 @@ import numba as nb
 import scipy as sp
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial import distance
-from scipy.stats import entropy
+from scipy.stats import entropy, pearsonr
 import ast
 from tqdm import tqdm
 import multiprocessing as mp
@@ -11,7 +11,12 @@ from pathos.multiprocessing import ProcessingPool as Pool
 import time
 import itertools
 import powerlaw
+from fastdtw import fastdtw
 import matplotlib.pyplot as plt
+from dtw import dtw, accelerated_dtw
+from cdtw import pydtw
+from awarp import rle
+from dask import delayed, compute
 
 
 def find_common(arrays_):
@@ -313,8 +318,7 @@ method=’centroid’ assigns where and are the centroids of clusters and , resp
 
 method=’median’ assigns like the centroid method. When two clusters and are combined into a new cluster , the average of centroids s and t give the new centroid. This is also known as the WPGMC algorithm.
 
-method=’ward’ uses the Ward variance minimization algorithm. The new entry is computed as follows, where
-is the newly joined cluster consisting of clusters and , is an unused cluster in the forest, and is the cardinality of its argument. This is also known as the incremental algorithm.
+method=’ward’ uses the Ward variance minimization algorithm. The new entry is computed as follows, where is the newly joined cluster consisting of clusters and , is an unused cluster in the forest, and is the cardinality of its argument. This is also known as the incremental algorithm.
 '''
 
 
@@ -345,7 +349,6 @@ def cust_dist_matrix(X, metric):
 
     return m
 
-
 def turning_points(arr_):
     """
     Computes the turning point for a given array
@@ -361,4 +364,117 @@ def turning_points(arr_):
     """
     dx = np.diff(arr_)
     return np.sum(dx[1:] * dx[:-1] < 0)
+
+
+def warped_correlation(x, y):
+
+    # dist, path = fastdtw(z_scores_x, z_scores_y, dist=distance.euclidean)
+
+    path = pydtw.dtw(x, y, pydtw.Settings(step='p0sym',  # Sakoe-Chiba symmetric step with slope constraint p = 0
+        window='palival',  # type of the window
+        param=2.0,  # window parameter
+        norm=False,  # normalization
+        compute_path=True)).get_path()
+
+    x_path, y_path = zip(*path)
+    x_path = np.asarray(x_path)
+    y_path = np.asarray(y_path)
+
+    x_warped = x[x_path]
+    y_warped = y[y_path]
+
+    corr = np.corrcoef(x_warped, y_warped)[0, 1]
+
+    return corr
+
+
+def get_ecd_mx(X):
+    """
+    Computes the euclidean distance matrix for a given 1D array
+
+    Parameters
+    ----------
+    X : 1D array
+
+    Returns
+    -------
+    mx: euclidean distance matrix
+    """
+
+    combinations = [p for p in itertools.product(
+        list(range(0, len(X))), repeat=2)]
+
+    mx = []
+    for ix, jx in combinations:
+        mx.append(get_ecd(X[ix], X[jx], square=False))
+
+    mx = np.array_split(mx, len(X))
+
+    return mx
+
+
+def get_distance_mx(X, metric):
+    """
+    Computes the distance matrix for a given 1D array and measure
+
+    Parameters
+    ----------
+    X : 1D array
+    metric: distance function
+
+    Returns
+    -------
+    mx: euclidean distance matrix
+    """
+
+    combinations = [p for p in itertools.product(
+        list(range(0, len(X))), repeat=2)]
+
+    mx = [delayed(metric)(X[ix], X[jx],) for ix, jx in combinations]
     
+    mx = compute(*mx)
+
+    mx = np.array_split(mx, len(X))
+
+    return mx
+
+
+def merge_similar(arr_):
+    """
+    Merges 1D arrays that share the same values
+
+    Parameters
+    ----------
+    arr_: 1D array of 1D arrays (ex:  [[1, 4], [2, 5], [3, 5]])
+
+    Returns
+    -------
+    new_: 1D array of 1D arrays (ex:  [[1, 4], [2, 3, 5]])
+    """
+
+    arr_ = np.array(arr_)
+
+    new_ = []
+
+    for ix in range(len(arr_[:-1])):
+        common = np.intersect1d(arr_[ix], arr_[ix + 1])
+
+        if len(common) > 0:
+            merge = np.unique(np.concatenate((arr_[ix], arr_[ix + 1])))
+            print(merge)
+            new_.append(merge)
+        else:
+            new_.append(arr_[ix])
+
+    return new_
+
+# x = np.load('{}{}/{}.npy'.format('../../data/interim/', 'users_rle', '790680'))
+# y = np.load('{}{}/{}.npy'.format('../../data/interim/', 'users_rle', '14594813'))
+
+# x = np.array([1, 2, 3, 4, 5])
+# y = np.array([1, 2, 3, 4, 6])
+
+# print(warped_correlation(x, y))
+
+# print(x)
+
