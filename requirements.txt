@@ -38,7 +38,7 @@ nltk == 3.3
 # sentiment_utils.py: 1
 # sqlite_utils.py: 4
 # topic_modeling_utils.py: 2
-numpy == 1.14.3
+numpy == 1.22.0
 
 # date_utils.py: 1
 # matrix_utils.py: 2
